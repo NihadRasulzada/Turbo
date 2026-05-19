@@ -1,0 +1,16 @@
+root = true
+
+# Bütün fayllar üçün ümumi tənzimləmələr
+[*]
+indent_style = space
+# Faylın sonunda boş sətir qoyulmasını söndürür
+insert_final_newline = false
+
+# Xml faylları üçün
+[*.xml]
+indent_size = 2
+
+# C# faylları üçün
+[*.cs]
+# File-scoped namespaces istifadəsini aktivləşdirir
+csharp_style_namespace_declarations = file_scoped:suggestion

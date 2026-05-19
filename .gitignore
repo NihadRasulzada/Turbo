@@ -1,0 +1,70 @@
+# =========================
+# .NET / ASP.NET Core
+# =========================
+bin/
+obj/
+out/
+
+# Rider / VS / VS Code
+.vs/
+.vscode/
+
+# Claude Code
+.claude/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# ASP.NET Core
+# =========================
+wwwroot/lib/
+wwwroot/dist/
+
+# =========================
+# Entity Framework
+# =========================
+*.db
+*.db-shm
+*.db-wal
+
+# =========================
+# App settings (SECRETS)
+# =========================
+appsettings.json
+appsettings.Development.json
+
+# =========================
+# Environment files
+# =========================
+.env
+.env.*
+
+# =========================
+# Publish
+# =========================
+publish/
+*.Publish.xml
+
+# =========================
+# NuGet
+# =========================
+*.nupkg
+# Uncomment if you don't want to commit restored packages
+# packages/
+
+# =========================
+# Test results
+# =========================
+TestResults/

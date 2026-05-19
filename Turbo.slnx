@@ -1,0 +1,42 @@
+<Solution>
+  <Folder Name="/src/">
+    <Folder Name="/src/BuildingBlocks/" />
+    <Folder Name="/src/Modules/" />
+    <Folder Name="/src/Presentation/" />
+  </Folder>
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/Turbo.Shared.Application/Turbo.Shared.Application.csproj" />
+    <Project Path="src/BuildingBlocks/Turbo.Shared.Contracts/Turbo.Shared.Contracts.csproj" />
+    <Project Path="src/BuildingBlocks/Turbo.Shared.Domain/Turbo.Shared.Domain.csproj" />
+    <Project Path="src/BuildingBlocks/Turbo.Shared.Infrastructure/Turbo.Shared.Infrastructure.csproj" />
+    <Project Path="src/BuildingBlocks/Turbo.Shared.Web/Turbo.Shared.Web.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Car/" />
+  <Folder Name="/src/Modules/Car/Core/">
+    <Project Path="src/Modules/Car/Core/Turbo.Module.Car.Application/Turbo.Module.Car.Application.csproj" />
+    <Project Path="src/Modules/Car/Core/Turbo.Module.Car.Domain/Turbo.Module.Car.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Car/Infrastructure/">
+    <Project Path="src/Modules/Car/Infrastructure/Turbo.Module.Car.Infrastructure/Turbo.Module.Car.Infrastructure.csproj" />
+    <Project Path="src/Modules/Car/Infrastructure/Turbo.Module.Car.Persistence/Turbo.Module.Car.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Car/Presentation/">
+    <Project Path="src/Modules/Car/Presentation/Turbo.Module.Car.DependencyInjection/Turbo.Module.Car.DependencyInjection.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Identity/" />
+  <Folder Name="/src/Modules/Identity/Core/">
+    <Project Path="src/Modules/Identity/Core/Turbo.Module.Identity.Application/Turbo.Module.Identity.Application.csproj" />
+    <Project Path="src/Modules/Identity/Core/Turbo.Module.Identity.Domain/Turbo.Module.Identity.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Identity/Infrastructure/">
+    <Project Path="src/Modules/Identity/Infrastructure/Turbo.Module.Identity.Infrastructure/Turbo.Module.Identity.Infrastructure.csproj" />
+    <Project Path="src/Modules/Identity/Infrastructure/Turbo.Module.Identity.Persistence/Turbo.Module.Identity.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Identity/Presentation/">
+    <Project Path="src/Modules/Identity/Presentation/Turbo.Module.Identity.DependencyInjection/Turbo.Module.Identity.DependencyInjection.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentation/">
+    <Project Path="src/Presentation/Turbo.API/Turbo.API.csproj" />
+  </Folder>
+</Solution>
