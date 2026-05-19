@@ -1,3 +1,5 @@
+using Turbo.Shared.Application.ResponseObject.Enums;
+
 namespace Turbo.Shared.Application.ResponseObject.Abstraction;
 
 public interface IResponse

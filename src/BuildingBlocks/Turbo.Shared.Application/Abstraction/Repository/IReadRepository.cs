@@ -1,3 +1,7 @@
+using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore.Query;
+using Turbo.Shared.Domain.Models;
+
 namespace Turbo.Shared.Application.Abstraction.Repository;
 
 public interface IReadRepository<TEntity> : IRepository<TEntity>

@@ -1,3 +1,8 @@
+using System.Linq.Expressions;
+using System.Reflection;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Turbo.Shared.Application.Context;
+
 namespace Turbo.Shared.Application.Extensions;
 
 public static class DbContextFkExtensions

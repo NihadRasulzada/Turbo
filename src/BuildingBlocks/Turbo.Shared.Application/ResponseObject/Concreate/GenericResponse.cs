@@ -1,3 +1,6 @@
+using Turbo.Shared.Application.ResponseObject.Abstraction;
+using Turbo.Shared.Application.ResponseObject.Enums;
+
 namespace Turbo.Shared.Application.ResponseObject.Concreate;
 
 public class Response<T> : Response, IResponse<T>

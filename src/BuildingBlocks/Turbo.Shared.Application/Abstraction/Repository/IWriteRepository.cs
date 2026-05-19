@@ -1,3 +1,5 @@
+using Turbo.Shared.Domain.Models;
+
 namespace Turbo.Shared.Application.Abstraction.Repository;
 
 public interface IWriteRepository<TEntity> : IRepository<TEntity>

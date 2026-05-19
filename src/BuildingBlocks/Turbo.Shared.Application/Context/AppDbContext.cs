@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace Turbo.Shared.Application.Context;
 
 public class AppDbContext : DbContext
