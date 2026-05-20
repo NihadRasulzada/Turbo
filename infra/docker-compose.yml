@@ -1,0 +1,97 @@
+# =====================================================
+# Turbo - Docker Compose (Development)
+# Qaldırır: command-db, query-db, replication-setup
+# API yerli (lokal) işləyir → DB-lərə localhost üzərindən qoşulur
+# =====================================================
+
+name: turbo-dev
+
+services:
+
+  # ── Command DB (Write / Publisher) ──────────────────
+  command-db:
+    image: postgres:16-alpine
+    container_name: turbo-command-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${COMMAND_DB_NAME:-turbo_command}
+      POSTGRES_USER: ${COMMAND_DB_USER:-turbo}
+      POSTGRES_PASSWORD: ${COMMAND_DB_PASSWORD:-turbo_password}
+    command:
+      - postgres
+      - -c
+      - wal_level=logical          # logical replication üçün şərt
+      - -c
+      - max_replication_slots=5
+      - -c
+      - max_wal_senders=5
+    volumes:
+      - command_db_data:/var/lib/postgresql/data
+      - ./docker/postgres/init/01-init-replication.sql:/docker-entrypoint-initdb.d/01-init-replication.sql:ro
+    ports:
+      - "${COMMAND_DB_PORT:-5433}:5432"   # lokal: 5433, containerdə: 5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${COMMAND_DB_USER:-turbo} -d ${COMMAND_DB_NAME:-turbo_command}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - turbo-net
+
+  # ── Query DB (Read / Subscriber) ────────────────────
+  query-db:
+    image: postgres:16-alpine
+    container_name: turbo-query-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${QUERY_DB_NAME:-turbo_query}
+      POSTGRES_USER: ${QUERY_DB_USER:-turbo}
+      POSTGRES_PASSWORD: ${QUERY_DB_PASSWORD:-turbo_password}
+    volumes:
+      - query_db_data:/var/lib/postgresql/data
+    ports:
+      - "${QUERY_DB_PORT:-5434}:5432"     # lokal: 5434, containerdə: 5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${QUERY_DB_USER:-turbo} -d ${QUERY_DB_NAME:-turbo_query}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - turbo-net
+
+  # ── Replication Setup (one-shot) ────────────────────
+  # Hər iki DB hazır olandan sonra publication + subscription yaradır
+  replication-setup:
+    image: postgres:16-alpine
+    container_name: turbo-replication-setup
+    restart: on-failure
+    environment:
+      COMMAND_DB_HOST: command-db
+      COMMAND_DB_PORT: 5432
+      QUERY_DB_HOST: query-db
+      QUERY_DB_PORT: 5432
+      POSTGRES_USER: ${COMMAND_DB_USER:-turbo}
+      POSTGRES_PASSWORD: ${COMMAND_DB_PASSWORD:-turbo_password}
+      COMMAND_DB_NAME: ${COMMAND_DB_NAME:-turbo_command}
+      QUERY_DB_NAME: ${QUERY_DB_NAME:-turbo_query}
+      REPLICATOR_PASSWORD: ${REPLICATOR_PASSWORD:-replicator_password}
+    volumes:
+      - ./docker/postgres/init/02-setup-replication.sh:/setup-replication.sh:ro
+    entrypoint: ["/bin/sh", "/setup-replication.sh"]
+    depends_on:
+      command-db:
+        condition: service_healthy
+      query-db:
+        condition: service_healthy
+    networks:
+      - turbo-net
+
+volumes:
+  command_db_data:
+    driver: local
+  query_db_data:
+    driver: local
+
+networks:
+  turbo-net:
+    driver: bridge
