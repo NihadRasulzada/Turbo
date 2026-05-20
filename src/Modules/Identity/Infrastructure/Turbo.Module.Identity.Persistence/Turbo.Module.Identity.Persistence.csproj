@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Turbo.Module.Identity.Application\Turbo.Module.Identity.Application.csproj" />
+    <ProjectReference Include="..\Turbo.Module.Identity.Infrastructure\Turbo.Module.Identity.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
