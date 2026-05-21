@@ -108,6 +108,31 @@ prod-down:
 prod-logs:
 	docker compose -f infra/docker-compose.prod.yml logs -f
 
+# ── Redis ─────────────────────────────────────────────────────
+.PHONY: redis-cli
+redis-cli:
+	docker exec -it turbo-redis redis-cli -a $$(grep REDIS_PASSWORD infra/env/.env | cut -d= -f2)
+
+.PHONY: redis-flush
+redis-flush:
+	docker exec -it turbo-redis redis-cli -a $$(grep REDIS_PASSWORD infra/env/.env | cut -d= -f2) FLUSHALL
+
+# ── RabbitMQ ──────────────────────────────────────────────────
+.PHONY: rabbit-ui
+rabbit-ui:
+	@MGMT_PORT=$$(grep RABBITMQ_MANAGEMENT_PORT infra/env/.env | cut -d= -f2); \
+	MGMT_PORT=$${MGMT_PORT:-15672}; \
+	echo "RabbitMQ UI: http://localhost:$$MGMT_PORT"; \
+	xdg-open "http://localhost:$$MGMT_PORT" 2>/dev/null || open "http://localhost:$$MGMT_PORT" 2>/dev/null || true
+
+# ── MinIO ─────────────────────────────────────────────────────
+.PHONY: minio-ui
+minio-ui:
+	@CONSOLE_PORT=$$(grep MINIO_CONSOLE_PORT infra/env/.env | cut -d= -f2); \
+	CONSOLE_PORT=$${CONSOLE_PORT:-9001}; \
+	echo "MinIO Console: http://localhost:$$CONSOLE_PORT"; \
+	xdg-open "http://localhost:$$CONSOLE_PORT" 2>/dev/null || open "http://localhost:$$CONSOLE_PORT" 2>/dev/null || true
+
 # ── Setup ─────────────────────────────────────────────────────
 .PHONY: setup
 setup:
@@ -145,10 +170,10 @@ help:
 	@echo "  list             Solution-dakı layihələri göstər"
 	@echo ""
 	@echo "  ── Docker (Development) ──────────────────────────────────"
-	@echo "  dev-up           DB-ləri qaldır"
-	@echo "  dev-down         DB-ləri dayandır"
-	@echo "  dev-logs         DB log-larını izlə"
-	@echo "  dev-reset        DB-ləri volume-larla birlikdə sıfırla"
+	@echo "  dev-up           Bütün servisləri qaldır (DB, Redis, RabbitMQ)"
+	@echo "  dev-down         Servisləri dayandır"
+	@echo "  dev-logs         Log-ları izlə"
+	@echo "  dev-reset        Servisləri volume-larla birlikdə sıfırla"
 	@echo "  dev-ps           Çalışan containerləri göstər"
 	@echo ""
 	@echo "  ── Docker (Production) ───────────────────────────────────"
@@ -156,6 +181,16 @@ help:
 	@echo "  prod-up          Bütün sistemi production-da qaldır"
 	@echo "  prod-down        Production-u dayandır"
 	@echo "  prod-logs        Production log-larını izlə"
+	@echo ""
+	@echo "  ── Redis ─────────────────────────────────────────────────"
+	@echo "  redis-cli        Redis CLI-a qoşul"
+	@echo "  redis-flush      Redis cache-i təmizlə"
+	@echo ""
+	@echo "  ── RabbitMQ ──────────────────────────────────────────────"
+	@echo "  rabbit-ui        Management UI-ı brauzerdə aç (http://localhost:15672)"
+	@echo ""
+	@echo "  ── MinIO ─────────────────────────────────────────────────"
+	@echo "  minio-ui         Console UI-ı brauzerdə aç  (http://localhost:9001)"
 	@echo ""
 	@echo "  ── Setup ─────────────────────────────────────────────────"
 	@echo "  setup            .env fayllarını nümunədən yarat"

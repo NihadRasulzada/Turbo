@@ -3,7 +3,7 @@
 # =====================================================
 
 # ── Build Stage ──────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /repo
 
 COPY . .
@@ -17,7 +17,7 @@ RUN dotnet publish src/Presentation/Turbo.API/Turbo.API.csproj \
     /p:UseAppHost=false
 
 # ── Runtime Stage ────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 
 # Non-root user üçün təhlükəsizlik
