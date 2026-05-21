@@ -44,12 +44,15 @@ wwwroot/dist/
 # =========================
 appsettings.json
 appsettings.Development.json
+!appsettings.Example.json
 
 # =========================
 # Environment files
 # =========================
 .env
 .env.*
+!.env.example
+!.env.*.example
 
 # =========================
 # Publish
