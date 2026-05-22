@@ -6,4 +6,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Minio" Version="6.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../Core/Turbo.Module.Media.Application/Turbo.Module.Media.Application.csproj" />
+  </ItemGroup>
+
 </Project>

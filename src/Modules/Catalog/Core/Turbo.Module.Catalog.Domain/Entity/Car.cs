@@ -13,6 +13,8 @@ public class Car : BaseEntity
     private FuelType _fuelType;
     private TransmissionType _transmissionType;
     private int _mileage;
+    private int _price;
+    private string _description = string.Empty;
 
     public Brand Brand
     {
@@ -75,13 +77,39 @@ public class Car : BaseEntity
         }
     }
 
+    public int Price
+    {
+        get => _price;
+        private set
+        {
+            if (value <= 0)
+                throw new DomainException("Price must be greater than zero.");
+            _price = value;
+        }
+    }
+
+    public string Description
+    {
+        get => _description;
+        private set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new DomainException("Description cannot be empty.");
+            if (value.Length > 2000)
+                throw new DomainException("Description must not exceed 2000 characters.");
+            _description = value;
+        }
+    }
+
     public Car(
         Brand brand,
         Model model,
         short year,
         FuelType fuelType,
         TransmissionType transmissionType,
-        int mileage
+        int mileage,
+        int price,
+        string description
     )
         : base(Guid.NewGuid())
     {
@@ -91,6 +119,8 @@ public class Car : BaseEntity
         FuelType = fuelType;
         TransmissionType = transmissionType;
         Mileage = mileage;
+        Price = price;
+        Description = description;
     }
 
     protected Car()

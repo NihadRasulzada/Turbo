@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="../Turbo.Module.Media.Domain/Turbo.Module.Media.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
