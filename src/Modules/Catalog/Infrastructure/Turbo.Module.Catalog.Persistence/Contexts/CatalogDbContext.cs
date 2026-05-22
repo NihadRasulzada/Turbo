@@ -7,4 +7,5 @@ namespace Turbo.Module.Catalog.Persistence.Contexts;
 public abstract class CatalogDbContext(DbContextOptions options) : AppDbContext(options)
 {
     public required DbSet<Car> Cars { get; set; }
+    public required DbSet<CarDraft> CarDrafts { get; set; }
 }

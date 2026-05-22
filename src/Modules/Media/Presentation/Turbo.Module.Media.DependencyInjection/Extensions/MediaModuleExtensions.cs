@@ -75,6 +75,7 @@ public static class MediaModuleExtensions
 
     public static void AddMediaConsumers(this IBusRegistrationConfigurator cfg)
     {
-        cfg.AddConsumer<CarCreatedEventConsumer>();
+        cfg.AddConsumer<DraftImagesUploadedConsumer>();
+        cfg.AddConsumer<CarListingPublishedConsumer>();
     }
 }

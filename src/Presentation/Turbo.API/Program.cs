@@ -4,7 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Turbo.Module.Catalog.Persistence.Contexts;
-using Turbo.Module.Catalog.Persistence.Features.Car.Commands.Add;
+using Turbo.Module.Catalog.Persistence.Features.Onboarding;
+using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.CreateDraft;
+using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftDetails;
+using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftImages;
+using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftPricing;
+using Turbo.Module.Catalog.Persistence.Features.Onboarding.Queries.GetDraft;
+using Turbo.Module.Catalog.Persistence.Features.Onboarding.Queries.GetOnboardingConfig;
 using Turbo.Module.Media.DependencyInjection.Extensions;
 using Turbo.Shared.Application.Abstraction;
 using Turbo.Shared.Infrastructure.Implementations;
@@ -45,12 +51,33 @@ builder.Services.AddDbContext<QueryDbContext>(opt =>
 builder.Services.AddScoped<ICommandDispatcher, CommandDispatcher>();
 builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 
+// Onboarding commands
 builder.Services.AddScoped<
-    ICommandHandler<AddCarRequest, AppConc.Response<AddCarResponse>>,
-    AddCarHandler
->();
+    ICommandHandler<CreateDraftRequest, AppConc.Response<CreateDraftResponse>>,
+    CreateDraftHandler>();
 
-builder.Services.AddScoped<IValidator<AddCarRequest>, AddCarValidator>();
+builder.Services.AddScoped<
+    ICommandHandler<SubmitDraftImagesRequest, AppConc.Response<DraftStepResponse>>,
+    SubmitDraftImagesHandler>();
+
+builder.Services.AddScoped<
+    ICommandHandler<SubmitDraftDetailsRequest, AppConc.Response<DraftStepResponse>>,
+    SubmitDraftDetailsHandler>();
+builder.Services.AddScoped<IValidator<SubmitDraftDetailsRequest>, SubmitDraftDetailsValidator>();
+
+builder.Services.AddScoped<
+    ICommandHandler<SubmitDraftPricingRequest, AppConc.Response<DraftStepResponse>>,
+    SubmitDraftPricingHandler>();
+builder.Services.AddScoped<IValidator<SubmitDraftPricingRequest>, SubmitDraftPricingValidator>();
+
+// Onboarding queries
+builder.Services.AddScoped<
+    IQueryHandler<GetOnboardingConfigRequest, AppConc.Response<GetOnboardingConfigResponse>>,
+    GetOnboardingConfigHandler>();
+
+builder.Services.AddScoped<
+    IQueryHandler<GetDraftRequest, AppConc.Response<GetDraftResponse>>,
+    GetDraftHandler>();
 
 // ── Media ────────────────────────────────────────────────────────────────────
 builder.Services.AddMediaModule(builder.Configuration);
