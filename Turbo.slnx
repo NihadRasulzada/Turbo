@@ -24,6 +24,18 @@
   <Folder Name="/src/Modules/Catalog/Presentation/">
     <Project Path="src/Modules/Catalog/Presentation/Turbo.Module.Catalog.DependencyInjection/Turbo.Module.Catalog.DependencyInjection.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/Comparison/" />
+  <Folder Name="/src/Modules/Comparison/Core/">
+    <Project Path="src/Modules/Comparison/Core/Turbo.Module.Comparison.Application/Turbo.Module.Comparison.Application.csproj" />
+    <Project Path="src/Modules/Comparison/Core/Turbo.Module.Comparison.Domain/Turbo.Module.Comparison.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Comparison/Infrastructure/">
+    <Project Path="src/Modules/Comparison/Infrastructure/Turbo.Module.Comparison.Infrastructure/Turbo.Module.Comparison.Infrastructure.csproj" />
+    <Project Path="src/Modules/Comparison/Infrastructure/Turbo.Module.Comparison.Persistence/Turbo.Module.Comparison.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Comparison/Presentation/">
+    <Project Path="src/Modules/Comparison/Presentation/Turbo.Module.Comparison.DependencyInjection/Turbo.Module.Comparison.DependencyInjection.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Identity/" />
   <Folder Name="/src/Modules/Identity/Core/">
     <Project Path="src/Modules/Identity/Core/Turbo.Module.Identity.Application/Turbo.Module.Identity.Application.csproj" />
@@ -35,6 +47,54 @@
   </Folder>
   <Folder Name="/src/Modules/Identity/Presentation/">
     <Project Path="src/Modules/Identity/Presentation/Turbo.Module.Identity.DependencyInjection/Turbo.Module.Identity.DependencyInjection.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Media/" />
+  <Folder Name="/src/Modules/Media/Core/">
+    <Project Path="src/Modules/Media/Core/Turbo.Module.Media.Application/Turbo.Module.Media.Application.csproj" />
+    <Project Path="src/Modules/Media/Core/Turbo.Module.Media.Domain/Turbo.Module.Media.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Media/Infrastructure/">
+    <Project Path="src/Modules/Media/Infrastructure/Turbo.Module.Media.Infrastructure/Turbo.Module.Media.Infrastructure.csproj" />
+    <Project Path="src/Modules/Media/Infrastructure/Turbo.Module.Media.Persistence/Turbo.Module.Media.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Media/Presentation/">
+    <Project Path="src/Modules/Media/Presentation/Turbo.Module.Media.DependencyInjection/Turbo.Module.Media.DependencyInjection.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Messaging/" />
+  <Folder Name="/src/Modules/Messaging/Core/">
+    <Project Path="src/Modules/Messaging/Core/Turbo.Module.Messaging.Application/Turbo.Module.Messaging.Application.csproj" />
+    <Project Path="src/Modules/Messaging/Core/Turbo.Module.Messaging.Domain/Turbo.Module.Messaging.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Messaging/Infrastructure/">
+    <Project Path="src/Modules/Messaging/Infrastructure/Turbo.Module.Messaging.Infrastructure/Turbo.Module.Messaging.Infrastructure.csproj" />
+    <Project Path="src/Modules/Messaging/Infrastructure/Turbo.Module.Messaging.Persistence/Turbo.Module.Messaging.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Messaging/Presentation/">
+    <Project Path="src/Modules/Messaging/Presentation/Turbo.Module.Messaging.DependencyInjection/Turbo.Module.Messaging.DependencyInjection.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notification/" />
+  <Folder Name="/src/Modules/Notification/Core/">
+    <Project Path="src/Modules/Notification/Core/Turbo.Module.Notification.Application/Turbo.Module.Notification.Application.csproj" />
+    <Project Path="src/Modules/Notification/Core/Turbo.Module.Notification.Domain/Turbo.Module.Notification.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notification/Infrastructure/">
+    <Project Path="src/Modules/Notification/Infrastructure/Turbo.Module.Notification.Infrastructure/Turbo.Module.Notification.Infrastructure.csproj" />
+    <Project Path="src/Modules/Notification/Infrastructure/Turbo.Module.Notification.Persistence/Turbo.Module.Notification.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notification/Presentation/">
+    <Project Path="src/Modules/Notification/Presentation/Turbo.Module.Notification.DependencyInjection/Turbo.Module.Notification.DependencyInjection.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/SavedItem/" />
+  <Folder Name="/src/Modules/SavedItem/Core/">
+    <Project Path="src/Modules/SavedItem/Core/Turbo.Module.SavedItem.Application/Turbo.Module.SavedItem.Application.csproj" />
+    <Project Path="src/Modules/SavedItem/Core/Turbo.Module.SavedItem.Domain/Turbo.Module.SavedItem.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/SavedItem/Infrastructure/">
+    <Project Path="src/Modules/SavedItem/Infrastructure/Turbo.Module.SavedItem.Infrastructure/Turbo.Module.SavedItem.Infrastructure.csproj" />
+    <Project Path="src/Modules/SavedItem/Infrastructure/Turbo.Module.SavedItem.Persistence/Turbo.Module.SavedItem.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/SavedItem/Presentation/">
+    <Project Path="src/Modules/SavedItem/Presentation/Turbo.Module.SavedItem.DependencyInjection/Turbo.Module.SavedItem.DependencyInjection.csproj" />
   </Folder>
   <Folder Name="/src/Presentation/">
     <Project Path="src/Presentation/Turbo.API/Turbo.API.csproj" />
