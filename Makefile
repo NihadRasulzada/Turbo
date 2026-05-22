@@ -51,7 +51,7 @@ format-check:
 # ── EF Core ───────────────────────────────────────────────────
 MODULE ?= Identity
 MIGRATIONS_PROJECT_IDENTITY := src/Modules/Identity/Infrastructure/Turbo.Module.Identity.Persistence/Turbo.Module.Identity.Persistence.csproj
-MIGRATIONS_PROJECT_CAR      := src/Modules/Car/Infrastructure/Turbo.Module.Car.Persistence/Turbo.Module.Car.Persistence.csproj
+MIGRATIONS_PROJECT_CAR      := src/Modules/Catalog/Infrastructure/Turbo.Module.Catalog.Persistence/Turbo.Module.Catalog.Persistence.csproj
 
 .PHONY: mig-add
 mig-add:
