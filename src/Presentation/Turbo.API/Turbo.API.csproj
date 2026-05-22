@@ -7,11 +7,15 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Modules\Catalog\Presentation\Turbo.Module.Catalog.DependencyInjection\Turbo.Module.Catalog.DependencyInjection.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\Presentation\Turbo.Module.Identity.DependencyInjection\Turbo.Module.Identity.DependencyInjection.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\Turbo.Shared.Infrastructure\Turbo.Shared.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\Turbo.Shared.Web\Turbo.Shared.Web.csproj" />
+    <ProjectReference Include="..\..\Modules\Catalog\Infrastructure\Turbo.Module.Catalog.Persistence\Turbo.Module.Catalog.Persistence.csproj" />
   </ItemGroup>
 
 </Project>
