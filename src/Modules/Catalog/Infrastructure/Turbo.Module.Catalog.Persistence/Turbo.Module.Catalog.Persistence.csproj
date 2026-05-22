@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Core\Turbo.Module.Catalog.Application\Turbo.Module.Catalog.Application.csproj" />
+    <ProjectReference Include="../../Core/Turbo.Module.Catalog.Application/Turbo.Module.Catalog.Application.csproj" />
+    <ProjectReference Include="../../../../BuildingBlocks/Turbo.Shared.Application/Turbo.Shared.Application.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
