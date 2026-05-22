@@ -34,15 +34,15 @@ public sealed class SubmitDraftPricingHandler(
         if (draft.CurrentStep != 3)
             return AppConc.Response<DraftStepResponse>.BadRequest(
                 "Complete the previous steps before submitting pricing.");
-        if (draft.Brand is null || draft.Model is null || draft.Year is null)
+        if (draft.BrandId is null || draft.ModelId is null || draft.Year is null)
             return AppConc.Response<DraftStepResponse>.BadRequest(
                 "Car details are incomplete. Resubmit the details step.");
 
         draft.SetPricing(command.Price, command.Description);
 
         var car = new Car(
-            draft.Brand.Value,
-            draft.Model.Value,
+            draft.BrandId.Value,
+            draft.ModelId.Value,
             draft.Year.Value,
             draft.FuelType!.Value,
             draft.TransmissionType!.Value,

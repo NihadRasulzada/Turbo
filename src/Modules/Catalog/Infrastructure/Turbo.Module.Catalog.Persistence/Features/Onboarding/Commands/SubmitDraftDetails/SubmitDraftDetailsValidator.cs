@@ -1,5 +1,4 @@
 using FluentValidation;
-using Turbo.Module.Catalog.Domain.Extensions;
 
 namespace Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftDetails;
 
@@ -7,12 +6,11 @@ public sealed class SubmitDraftDetailsValidator : AbstractValidator<SubmitDraftD
 {
     public SubmitDraftDetailsValidator()
     {
-        RuleFor(x => x.Brand).IsInEnum().WithMessage("Invalid brand.");
+        RuleFor(x => x.BrandId)
+            .NotEqual(Guid.Empty).WithMessage("BrandId is required.");
 
-        RuleFor(x => x.Model)
-            .IsInEnum().WithMessage("Invalid model.")
-            .Must((req, model) => model.BelongsTo(req.Brand))
-            .WithMessage(req => $"Model does not belong to brand {req.Brand}.");
+        RuleFor(x => x.ModelId)
+            .NotEqual(Guid.Empty).WithMessage("ModelId is required.");
 
         RuleFor(x => x.Year)
             .InclusiveBetween((short)1886, (short)DateTime.UtcNow.Year)

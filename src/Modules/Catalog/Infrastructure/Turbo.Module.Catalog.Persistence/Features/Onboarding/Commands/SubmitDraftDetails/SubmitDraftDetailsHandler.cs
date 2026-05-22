@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using Turbo.Module.Catalog.Domain.Enum;
 using Turbo.Module.Catalog.Persistence.Contexts;
 using Turbo.Shared.Application.Abstraction;
@@ -33,8 +34,18 @@ public sealed class SubmitDraftDetailsHandler(
                     ? "Complete the images step first."
                     : "Details step has already been submitted.");
 
+        var brand = await db.Brands.FindAsync([command.BrandId], ct);
+        if (brand is null)
+            return AppConc.Response<DraftStepResponse>.NotFound("Brand not found.");
+
+        var model = await db.Models
+            .FirstOrDefaultAsync(m => m.Id == command.ModelId && m.BrandId == command.BrandId, ct);
+        if (model is null)
+            return AppConc.Response<DraftStepResponse>.NotFound(
+                "Model not found or does not belong to the specified brand.");
+
         draft.SetDetails(
-            command.Brand, command.Model, command.Year,
+            command.BrandId, command.ModelId, command.Year,
             command.FuelType, command.TransmissionType, command.Mileage);
         draft.AdvanceStep();
         await db.SaveChangesAsync(ct);

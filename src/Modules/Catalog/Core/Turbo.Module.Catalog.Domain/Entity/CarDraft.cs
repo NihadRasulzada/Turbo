@@ -12,8 +12,8 @@ public class CarDraft : BaseEntity
     public DateTime CreatedAt { get; private set; }
 
     // Step 2 — car details
-    public Brand? Brand { get; private set; }
-    public Model? Model { get; private set; }
+    public Guid? BrandId { get; private set; }
+    public Guid? ModelId { get; private set; }
     public short? Year { get; private set; }
     public FuelType? FuelType { get; private set; }
     public TransmissionType? TransmissionType { get; private set; }
@@ -35,15 +35,15 @@ public class CarDraft : BaseEntity
     public void AdvanceStep() => CurrentStep++;
 
     public void SetDetails(
-        Brand brand,
-        Model model,
+        Guid brandId,
+        Guid modelId,
         short year,
         FuelType fuelType,
         TransmissionType transmissionType,
         int mileage)
     {
-        Brand = brand;
-        Model = model;
+        BrandId = brandId;
+        ModelId = modelId;
         Year = year;
         FuelType = fuelType;
         TransmissionType = transmissionType;

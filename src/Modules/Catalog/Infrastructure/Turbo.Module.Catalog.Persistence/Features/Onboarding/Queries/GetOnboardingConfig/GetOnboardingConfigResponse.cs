@@ -19,7 +19,8 @@ public sealed record OnboardingField(
     int? MaxLength = null,
     bool? Multiple = null,
     string? Accept = null,
-    IReadOnlyList<SelectOption>? Options = null
+    IReadOnlyList<SelectOption>? Options = null,
+    string? OptionsUrl = null
 );
 
 public sealed record SelectOption(int Value, string Label);

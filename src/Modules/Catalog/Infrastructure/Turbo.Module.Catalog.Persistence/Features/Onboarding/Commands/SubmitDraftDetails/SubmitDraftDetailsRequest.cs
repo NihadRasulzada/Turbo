@@ -6,8 +6,8 @@ namespace Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDr
 
 public sealed record SubmitDraftDetailsRequest(
     Guid DraftId,
-    Brand Brand,
-    Model Model,
+    Guid BrandId,
+    Guid ModelId,
     short Year,
     FuelType FuelType,
     TransmissionType TransmissionType,

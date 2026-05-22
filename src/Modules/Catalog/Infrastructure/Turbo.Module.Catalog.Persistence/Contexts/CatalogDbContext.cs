@@ -8,4 +8,6 @@ public abstract class CatalogDbContext(DbContextOptions options) : AppDbContext(
 {
     public required DbSet<Car> Cars { get; set; }
     public required DbSet<CarDraft> CarDrafts { get; set; }
+    public required DbSet<Brand> Brands { get; set; }
+    public required DbSet<Model> Models { get; set; }
 }

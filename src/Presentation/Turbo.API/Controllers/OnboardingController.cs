@@ -107,7 +107,7 @@ public sealed class OnboardingController(
         CancellationToken ct)
     {
         var command = new SubmitDraftDetailsRequest(
-            draftId, request.Brand, request.Model, request.Year,
+            draftId, request.BrandId, request.ModelId, request.Year,
             request.FuelType, request.TransmissionType, request.Mileage);
         var result = await commandDispatcher
             .DispatchAsync<SubmitDraftDetailsRequest, AppConc.Response<DraftStepResponse>>(command, ct);

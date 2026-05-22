@@ -11,14 +11,6 @@ public sealed class GetOnboardingConfigHandler
         GetOnboardingConfigRequest query,
         CancellationToken ct = default)
     {
-        var brands = Enum.GetValues<Brand>()
-            .Select(b => new SelectOption((int)b, b.ToString()))
-            .ToList();
-
-        var models = Enum.GetValues<Model>()
-            .Select(m => new SelectOption((int)m, m.ToString()))
-            .ToList();
-
         var fuelTypes = Enum.GetValues<FuelType>()
             .Select(f => new SelectOption((int)f, f.ToString()))
             .ToList();
@@ -36,8 +28,10 @@ public sealed class GetOnboardingConfigHandler
             ]),
             new(2, "details", "Avtomobil məlumatları",
             [
-                new("brand", "Marka", "select", Required: true, Options: brands),
-                new("model", "Model", "select", Required: true, Options: models),
+                new("brandId", "Marka", "select", Required: true,
+                    OptionsUrl: "/api/brands"),
+                new("modelId", "Model", "select", Required: true,
+                    OptionsUrl: "/api/models?brandId={brandId}"),
                 new("year", "İl", "number", Required: true,
                     Min: 1886, Max: DateTime.UtcNow.Year),
                 new("mileage", "Yürüş (km)", "number", Required: true, Min: 0),

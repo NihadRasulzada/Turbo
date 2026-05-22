@@ -4,6 +4,18 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Turbo.Module.Catalog.Persistence.Contexts;
+using Turbo.Module.Catalog.Persistence.Features.Brand;
+using Turbo.Module.Catalog.Persistence.Features.Brand.Commands.CreateBrand;
+using Turbo.Module.Catalog.Persistence.Features.Brand.Commands.DeleteBrand;
+using Turbo.Module.Catalog.Persistence.Features.Brand.Commands.UpdateBrand;
+using Turbo.Module.Catalog.Persistence.Features.Brand.Queries.GetAllBrands;
+using Turbo.Module.Catalog.Persistence.Features.Brand.Queries.GetBrandById;
+using Turbo.Module.Catalog.Persistence.Features.Model;
+using Turbo.Module.Catalog.Persistence.Features.Model.Commands.CreateModel;
+using Turbo.Module.Catalog.Persistence.Features.Model.Commands.DeleteModel;
+using Turbo.Module.Catalog.Persistence.Features.Model.Commands.UpdateModel;
+using Turbo.Module.Catalog.Persistence.Features.Model.Queries.GetAllModels;
+using Turbo.Module.Catalog.Persistence.Features.Model.Queries.GetModelById;
 using Turbo.Module.Catalog.Persistence.Features.Onboarding;
 using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.CreateDraft;
 using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftDetails;
@@ -50,6 +62,54 @@ builder.Services.AddDbContext<QueryDbContext>(opt =>
 
 builder.Services.AddScoped<ICommandDispatcher, CommandDispatcher>();
 builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
+
+// Brand queries
+builder.Services.AddScoped<
+    IQueryHandler<GetAllBrandsRequest, AppConc.Response<IReadOnlyList<BrandResponse>>>,
+    GetAllBrandsHandler>();
+
+builder.Services.AddScoped<
+    IQueryHandler<GetBrandByIdRequest, AppConc.Response<BrandResponse>>,
+    GetBrandByIdHandler>();
+
+// Brand commands
+builder.Services.AddScoped<
+    ICommandHandler<CreateBrandRequest, AppConc.Response<BrandResponse>>,
+    CreateBrandHandler>();
+builder.Services.AddScoped<IValidator<CreateBrandRequest>, CreateBrandValidator>();
+
+builder.Services.AddScoped<
+    ICommandHandler<UpdateBrandRequest, AppConc.Response<BrandResponse>>,
+    UpdateBrandHandler>();
+builder.Services.AddScoped<IValidator<UpdateBrandRequest>, UpdateBrandValidator>();
+
+builder.Services.AddScoped<
+    ICommandHandler<DeleteBrandRequest, AppConc.Response>,
+    DeleteBrandHandler>();
+
+// Model queries
+builder.Services.AddScoped<
+    IQueryHandler<GetAllModelsRequest, AppConc.Response<IReadOnlyList<ModelResponse>>>,
+    GetAllModelsHandler>();
+
+builder.Services.AddScoped<
+    IQueryHandler<GetModelByIdRequest, AppConc.Response<ModelResponse>>,
+    GetModelByIdHandler>();
+
+// Model commands
+builder.Services.AddScoped<
+    ICommandHandler<CreateModelRequest, AppConc.Response<ModelResponse>>,
+    CreateModelHandler>();
+builder.Services.AddScoped<IValidator<CreateModelRequest>, CreateModelValidator>();
+
+builder.Services.AddScoped<
+    ICommandHandler<UpdateModelRequest, AppConc.Response<ModelResponse>>,
+    UpdateModelHandler>();
+builder.Services.AddScoped<IValidator<UpdateModelRequest>, UpdateModelValidator>();
+
+builder.Services.AddScoped<
+    ICommandHandler<DeleteModelRequest, AppConc.Response>,
+    DeleteModelHandler>();
 
 // Onboarding commands
 builder.Services.AddScoped<
