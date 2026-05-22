@@ -1,6 +1,8 @@
 using FluentValidation;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 using Turbo.Module.Catalog.Persistence.Contexts;
 using Turbo.Module.Catalog.Persistence.Features.Car.Commands.Add;
 using Turbo.Module.Media.DependencyInjection.Extensions;
@@ -11,8 +13,22 @@ using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
 builder.Services.AddControllers();
+
+// ── OpenAPI / Scalar ──────────────────────────────────────────────────────────
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, ct) =>
+    {
+        document.Info = new OpenApiInfo
+        {
+            Title = "Turbo API",
+            Version = "v1",
+            Description = "REST API for the Turbo car marketplace platform."
+        };
+        return Task.CompletedTask;
+    });
+});
 
 // ── Options ──────────────────────────────────────────────────────────────────
 builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMq"));
@@ -62,7 +78,14 @@ builder.Services.AddMassTransit(x =>
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
+{
     app.MapOpenApi();
+    app.MapScalarApiReference(options =>
+    {
+        options.Title = "Turbo API";
+        options.Theme = ScalarTheme.Default;
+    });
+}
 
 app.UseHttpsRedirection();
 app.MapControllers();
