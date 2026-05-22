@@ -12,17 +12,17 @@
     <Project Path="src/BuildingBlocks/Turbo.Shared.Web/Turbo.Shared.Web.csproj" />
   </Folder>
   <Folder Name="/src/Modules/" />
-  <Folder Name="/src/Modules/Car/" />
-  <Folder Name="/src/Modules/Car/Core/">
-    <Project Path="src/Modules/Car/Core/Turbo.Module.Car.Application/Turbo.Module.Car.Application.csproj" />
-    <Project Path="src/Modules/Car/Core/Turbo.Module.Car.Domain/Turbo.Module.Car.Domain.csproj" />
+  <Folder Name="/src/Modules/Catalog/" />
+  <Folder Name="/src/Modules/Catalog/Core/">
+    <Project Path="src/Modules/Catalog/Core/Turbo.Module.Catalog.Application/Turbo.Module.Catalog.Application.csproj" />
+    <Project Path="src/Modules/Catalog/Core/Turbo.Module.Catalog.Domain/Turbo.Module.Catalog.Domain.csproj" />
   </Folder>
-  <Folder Name="/src/Modules/Car/Infrastructure/">
-    <Project Path="src/Modules/Car/Infrastructure/Turbo.Module.Car.Infrastructure/Turbo.Module.Car.Infrastructure.csproj" />
-    <Project Path="src/Modules/Car/Infrastructure/Turbo.Module.Car.Persistence/Turbo.Module.Car.Persistence.csproj" />
+  <Folder Name="/src/Modules/Catalog/Infrastructure/">
+    <Project Path="src/Modules/Catalog/Infrastructure/Turbo.Module.Catalog.Infrastructure/Turbo.Module.Catalog.Infrastructure.csproj" />
+    <Project Path="src/Modules/Catalog/Infrastructure/Turbo.Module.Catalog.Persistence/Turbo.Module.Catalog.Persistence.csproj" />
   </Folder>
-  <Folder Name="/src/Modules/Car/Presentation/">
-    <Project Path="src/Modules/Car/Presentation/Turbo.Module.Car.DependencyInjection/Turbo.Module.Car.DependencyInjection.csproj" />
+  <Folder Name="/src/Modules/Catalog/Presentation/">
+    <Project Path="src/Modules/Catalog/Presentation/Turbo.Module.Catalog.DependencyInjection/Turbo.Module.Catalog.DependencyInjection.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Identity/" />
   <Folder Name="/src/Modules/Identity/Core/">
