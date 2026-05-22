@@ -45,4 +45,19 @@ public sealed class MinioService(IMinioClient minioClient, IOptions<MinioSetting
         var scheme = _settings.UseSSL ? "https" : "http";
         return $"{scheme}://{_settings.Endpoint}/{_bucket}/{objectKey}";
     }
+
+    public async Task<byte[]> DownloadAsync(string objectKey, CancellationToken ct = default)
+    {
+        using var ms = new MemoryStream();
+
+        var args = new GetObjectArgs()
+            .WithBucket(_bucket)
+            .WithObject(objectKey)
+            .WithCallbackStream(async (stream, cancellationToken) =>
+                await stream.CopyToAsync(ms, cancellationToken)
+            );
+
+        await minioClient.GetObjectAsync(args, ct);
+        return ms.ToArray();
+    }
 }

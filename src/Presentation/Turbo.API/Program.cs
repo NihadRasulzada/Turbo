@@ -6,6 +6,7 @@ using Turbo.Module.Catalog.Persistence.Features.Car.Commands.Add;
 using Turbo.Module.Media.DependencyInjection.Extensions;
 using Turbo.Shared.Application.Abstraction;
 using Turbo.Shared.Infrastructure.Implementations;
+using Turbo.Shared.Infrastructure.Settings;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,13 +14,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 
-// ── Catalog ─────────────────────────────────────────────────────────────────
+// ── Options ──────────────────────────────────────────────────────────────────
+builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMq"));
+
+// ── Catalog ──────────────────────────────────────────────────────────────────
 builder.Services.AddDbContext<CommandDbContext>(opt =>
-    opt.UseNpgsql(builder.Configuration.GetConnectionString("CatalogCommand"))
+    opt.UseNpgsql(builder.Configuration.GetConnectionString("CommandDb"))
 );
 
 builder.Services.AddDbContext<QueryDbContext>(opt =>
-    opt.UseNpgsql(builder.Configuration.GetConnectionString("CatalogQuery"))
+    opt.UseNpgsql(builder.Configuration.GetConnectionString("QueryDb"))
 );
 
 builder.Services.AddScoped<ICommandDispatcher, CommandDispatcher>();

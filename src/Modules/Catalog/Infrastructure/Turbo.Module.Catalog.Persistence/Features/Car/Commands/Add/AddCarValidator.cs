@@ -5,8 +5,6 @@ namespace Turbo.Module.Catalog.Persistence.Features.Car.Commands.Add;
 
 public sealed class AddCarValidator : AbstractValidator<AddCarRequest>
 {
-    private const int MaxImageSizeBytes = 10 * 1024 * 1024; // 10 MB
-
     public AddCarValidator()
     {
         RuleFor(x => x.Brand).IsInEnum().WithMessage("Invalid brand.");
@@ -33,13 +31,6 @@ public sealed class AddCarValidator : AbstractValidator<AddCarRequest>
             .NotEmpty().WithMessage("Description is required.")
             .MaximumLength(2000).WithMessage("Description must not exceed 2000 characters.");
 
-        RuleFor(x => x.Images)
-            .NotEmpty().WithMessage("At least one image is required.");
-
-        RuleForEach(x => x.Images)
-            .Must(img => img.Data.Length <= MaxImageSizeBytes)
-            .WithMessage("Each image must be smaller than 10 MB.")
-            .Must(img => !string.IsNullOrWhiteSpace(img.ContentType))
-            .WithMessage("Image content type is required.");
+        RuleFor(x => x.Images).NotEmpty().WithMessage("At least one image is required.");
     }
 }

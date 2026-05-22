@@ -4,7 +4,7 @@ using Turbo.Shared.Application.Context;
 
 namespace Turbo.Module.Media.Persistence.Contexts;
 
-public class MediaDbContext(DbContextOptions<MediaDbContext> options) : AppDbContext(options)
+public abstract class MediaDbContext(DbContextOptions options) : AppDbContext(options)
 {
     public required DbSet<CarImage> CarImages { get; set; }
 }

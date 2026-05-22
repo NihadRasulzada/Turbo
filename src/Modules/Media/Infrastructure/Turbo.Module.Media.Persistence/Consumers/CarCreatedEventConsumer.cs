@@ -6,7 +6,7 @@ using Turbo.Shared.Contracts.IntegrationEvents;
 
 namespace Turbo.Module.Media.Persistence.Consumers;
 
-public sealed class CarCreatedEventConsumer(MediaDbContext db, IMinioService minioService)
+public sealed class CarCreatedEventConsumer(CommandDbContext db, IMinioService minioService)
     : IConsumer<CarCreatedIntegrationEvent>
 {
     public async Task Consume(ConsumeContext<CarCreatedIntegrationEvent> context)
@@ -22,7 +22,7 @@ public sealed class CarCreatedEventConsumer(MediaDbContext db, IMinioService min
             var objectKey = $"cars/{message.CarId}/{Guid.NewGuid()}_{image.FileName}";
             using var stream = new MemoryStream(image.Data);
             var url = await minioService.UploadAsync(objectKey, stream, image.ContentType, ct);
-            carImages.Add(new CarImage(message.CarId, url, image.Order));
+            carImages.Add(new CarImage(message.CarId, url, objectKey, image.Order));
         }
 
         db.CarImages.AddRange(carImages);
