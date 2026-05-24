@@ -6,9 +6,9 @@ using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 namespace Turbo.Module.Catalog.Persistence.Features.Model.Queries.GetAllModels;
 
 public sealed class GetAllModelsHandler(QueryDbContext db)
-    : IQueryHandler<GetAllModelsRequest, AppConc.Response<IReadOnlyList<ModelResponse>>>
+    : IQueryHandler<GetAllModelsRequest, AppConc.Response<IReadOnlyList<GetAllModelsResponse>>>
 {
-    public async Task<AppConc.Response<IReadOnlyList<ModelResponse>>> HandleAsync(
+    public async Task<AppConc.Response<IReadOnlyList<GetAllModelsResponse>>> HandleAsync(
         GetAllModelsRequest query, CancellationToken ct = default)
     {
         var q = db.Models.AsNoTracking();
@@ -18,9 +18,9 @@ public sealed class GetAllModelsHandler(QueryDbContext db)
 
         var models = await q
             .OrderBy(m => m.Name)
-            .Select(m => new ModelResponse(m.Id, m.Name, m.BrandId))
+            .Select(m => new GetAllModelsResponse(m.Id, m.Name, m.BrandId))
             .ToListAsync(ct);
 
-        return AppConc.Response<IReadOnlyList<ModelResponse>>.Success(models);
+        return AppConc.Response<IReadOnlyList<GetAllModelsResponse>>.Success(models);
     }
 }

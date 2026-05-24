@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Turbo.API.Extensions;
-using Turbo.Module.Catalog.Persistence.Features.Brand;
 using Turbo.Module.Catalog.Persistence.Features.Brand.Commands.CreateBrand;
 using Turbo.Module.Catalog.Persistence.Features.Brand.Commands.DeleteBrand;
 using Turbo.Module.Catalog.Persistence.Features.Brand.Commands.UpdateBrand;
@@ -24,41 +23,41 @@ public sealed class BrandController(
 {
     /// <summary>Returns all brands ordered by name.</summary>
     [HttpGet]
-    [ProducesResponseType(typeof(SuccessResponse<IReadOnlyList<BrandResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SuccessResponse<IReadOnlyList<GetAllBrandsResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
         var result = await queryDispatcher
-            .DispatchAsync<GetAllBrandsRequest, AppConc.Response<IReadOnlyList<BrandResponse>>>(
+            .DispatchAsync<GetAllBrandsRequest, AppConc.Response<IReadOnlyList<GetAllBrandsResponse>>>(
                 new GetAllBrandsRequest(), ct);
         return this.HandleServiceResponse(result);
     }
 
     /// <summary>Returns a single brand by ID.</summary>
     [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(SuccessResponse<BrandResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SuccessResponse<GetBrandByIdResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById([FromRoute] Guid id, CancellationToken ct)
     {
         var result = await queryDispatcher
-            .DispatchAsync<GetBrandByIdRequest, AppConc.Response<BrandResponse>>(
+            .DispatchAsync<GetBrandByIdRequest, AppConc.Response<GetBrandByIdResponse>>(
                 new GetBrandByIdRequest(id), ct);
         return this.HandleServiceResponse(result);
     }
 
     /// <summary>Creates a new brand.</summary>
     [HttpPost]
-    [ProducesResponseType(typeof(CreatedResponse<BrandResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(CreatedResponse<CreateBrandResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Create([FromBody] CreateBrandRequest request, CancellationToken ct)
     {
         var result = await commandDispatcher
-            .DispatchAsync<CreateBrandRequest, AppConc.Response<BrandResponse>>(request, ct);
+            .DispatchAsync<CreateBrandRequest, AppConc.Response<CreateBrandResponse>>(request, ct);
         return this.HandleServiceResponse(result);
     }
 
     /// <summary>Updates an existing brand.</summary>
     [HttpPut("{id:guid}")]
-    [ProducesResponseType(typeof(SuccessResponse<BrandResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SuccessResponse<UpdateBrandResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(
@@ -67,7 +66,7 @@ public sealed class BrandController(
         CancellationToken ct)
     {
         var result = await commandDispatcher
-            .DispatchAsync<UpdateBrandRequest, AppConc.Response<BrandResponse>>(
+            .DispatchAsync<UpdateBrandRequest, AppConc.Response<UpdateBrandResponse>>(
                 new UpdateBrandRequest(id, request.Name), ct);
         return this.HandleServiceResponse(result);
     }

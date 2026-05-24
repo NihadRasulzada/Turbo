@@ -3,4 +3,4 @@ using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
 namespace Turbo.Module.Catalog.Persistence.Features.Brand.Commands.CreateBrand;
 
-public sealed record CreateBrandRequest(string Name) : ICommand<AppConc.Response<BrandResponse>>;
+public sealed record CreateBrandRequest(string Name) : ICommand<AppConc.Response<CreateBrandResponse>>;

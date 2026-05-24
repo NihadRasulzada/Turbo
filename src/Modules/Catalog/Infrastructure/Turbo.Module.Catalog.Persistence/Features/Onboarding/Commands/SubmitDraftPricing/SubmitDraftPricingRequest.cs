@@ -7,4 +7,4 @@ public sealed record SubmitDraftPricingRequest(
     Guid DraftId,
     int Price,
     string Description
-) : ICommand<AppConc.Response<DraftStepResponse>>;
+) : ICommand<AppConc.Response<SubmitDraftPricingResponse>>;

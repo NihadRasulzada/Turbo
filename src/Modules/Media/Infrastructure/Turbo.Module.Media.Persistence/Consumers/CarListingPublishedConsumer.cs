@@ -1,6 +1,6 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
-using Turbo.Module.Media.Domain.Entity;
+using Turbo.Module.Media.Domain.Enums;
 using Turbo.Module.Media.Persistence.Contexts;
 using Turbo.Shared.Contracts.IntegrationEvents;
 
@@ -14,19 +14,16 @@ public sealed class CarListingPublishedConsumer(CommandDbContext db)
         var message = context.Message;
         var ct = context.CancellationToken;
 
-        var draftImages = await db.CarDraftImages
-            .Where(x => x.DraftId == message.DraftId)
+        var draftMediaItems = await db.Medias
+            .Where(m => m.OwnerId == message.DraftId && m.OwnerType == MediaOwnerType.CarDraft)
             .ToListAsync(ct);
 
-        if (draftImages.Count == 0)
+        if (draftMediaItems.Count == 0)
             return;
 
-        var carImages = draftImages
-            .Select(di => new CarImage(message.CarId, di.Url, di.ObjectKey, di.Order))
-            .ToList();
+        foreach (var media in draftMediaItems)
+            media.TransferOwnership(message.CarId, MediaOwnerType.Car);
 
-        db.CarImages.AddRange(carImages);
-        db.CarDraftImages.RemoveRange(draftImages);
         await db.SaveChangesAsync(ct);
     }
 }

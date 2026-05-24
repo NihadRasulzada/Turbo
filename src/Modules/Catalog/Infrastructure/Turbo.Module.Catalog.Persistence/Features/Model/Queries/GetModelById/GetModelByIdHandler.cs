@@ -6,9 +6,9 @@ using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 namespace Turbo.Module.Catalog.Persistence.Features.Model.Queries.GetModelById;
 
 public sealed class GetModelByIdHandler(QueryDbContext db)
-    : IQueryHandler<GetModelByIdRequest, AppConc.Response<ModelResponse>>
+    : IQueryHandler<GetModelByIdRequest, AppConc.Response<GetModelByIdResponse>>
 {
-    public async Task<AppConc.Response<ModelResponse>> HandleAsync(
+    public async Task<AppConc.Response<GetModelByIdResponse>> HandleAsync(
         GetModelByIdRequest query, CancellationToken ct = default)
     {
         var model = await db.Models
@@ -16,7 +16,8 @@ public sealed class GetModelByIdHandler(QueryDbContext db)
             .FirstOrDefaultAsync(m => m.Id == query.Id, ct);
 
         return model is null
-            ? AppConc.Response<ModelResponse>.NotFound("Model not found.")
-            : AppConc.Response<ModelResponse>.Success(new ModelResponse(model.Id, model.Name, model.BrandId));
+            ? AppConc.Response<GetModelByIdResponse>.NotFound("Model not found.")
+            : AppConc.Response<GetModelByIdResponse>.Success(
+                new GetModelByIdResponse(model.Id, model.Name, model.BrandId));
     }
 }

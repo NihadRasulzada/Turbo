@@ -7,4 +7,4 @@ namespace Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDr
 public sealed record SubmitDraftImagesRequest(
     Guid DraftId,
     IReadOnlyList<ImageData> Images
-) : ICommand<AppConc.Response<DraftStepResponse>>;
+) : ICommand<AppConc.Response<SubmitDraftImagesResponse>>;

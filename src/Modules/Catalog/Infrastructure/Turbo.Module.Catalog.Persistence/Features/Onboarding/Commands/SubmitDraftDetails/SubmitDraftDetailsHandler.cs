@@ -1,47 +1,37 @@
-using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Turbo.Module.Catalog.Domain.Enum;
 using Turbo.Module.Catalog.Persistence.Contexts;
 using Turbo.Shared.Application.Abstraction;
-using Turbo.Shared.Application.ResponseObject;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
 namespace Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftDetails;
 
-public sealed class SubmitDraftDetailsHandler(
-    CommandDbContext db,
-    IValidator<SubmitDraftDetailsRequest> validator)
-    : ICommandHandler<SubmitDraftDetailsRequest, AppConc.Response<DraftStepResponse>>
+public sealed class SubmitDraftDetailsHandler(CommandDbContext db)
+    : ICommandHandler<SubmitDraftDetailsRequest, AppConc.Response<SubmitDraftDetailsResponse>>
 {
-    public async Task<AppConc.Response<DraftStepResponse>> HandleAsync(
+    public async Task<AppConc.Response<SubmitDraftDetailsResponse>> HandleAsync(
         SubmitDraftDetailsRequest command,
         CancellationToken ct = default)
     {
-        var validation = await validator.ValidateAsync(command, ct);
-        if (!validation.IsValid)
-            return AppConc.Response<DraftStepResponse>.ValidationError(
-                validation.Errors.Select(e =>
-                    new CustomValidationError(e.PropertyName, e.ErrorMessage)));
-
         var draft = await db.CarDrafts.FindAsync([command.DraftId], ct);
         if (draft is null)
-            return AppConc.Response<DraftStepResponse>.NotFound("Draft not found.");
+            return AppConc.Response<SubmitDraftDetailsResponse>.NotFound("Draft not found.");
         if (draft.Status == CarDraftStatus.Completed)
-            return AppConc.Response<DraftStepResponse>.BadRequest("Draft is already completed.");
+            return AppConc.Response<SubmitDraftDetailsResponse>.BadRequest("Draft is already completed.");
         if (draft.CurrentStep != 2)
-            return AppConc.Response<DraftStepResponse>.BadRequest(
+            return AppConc.Response<SubmitDraftDetailsResponse>.BadRequest(
                 draft.CurrentStep < 2
                     ? "Complete the images step first."
                     : "Details step has already been submitted.");
 
         var brand = await db.Brands.FindAsync([command.BrandId], ct);
         if (brand is null)
-            return AppConc.Response<DraftStepResponse>.NotFound("Brand not found.");
+            return AppConc.Response<SubmitDraftDetailsResponse>.NotFound("Brand not found.");
 
         var model = await db.Models
             .FirstOrDefaultAsync(m => m.Id == command.ModelId && m.BrandId == command.BrandId, ct);
         if (model is null)
-            return AppConc.Response<DraftStepResponse>.NotFound(
+            return AppConc.Response<SubmitDraftDetailsResponse>.NotFound(
                 "Model not found or does not belong to the specified brand.");
 
         draft.SetDetails(
@@ -50,7 +40,7 @@ public sealed class SubmitDraftDetailsHandler(
         draft.AdvanceStep();
         await db.SaveChangesAsync(ct);
 
-        return AppConc.Response<DraftStepResponse>.Success(
-            new DraftStepResponse(command.DraftId, 2, 3, "pricing", false));
+        return AppConc.Response<SubmitDraftDetailsResponse>.Success(
+            new SubmitDraftDetailsResponse(command.DraftId, 2, 3, "pricing"));
     }
 }

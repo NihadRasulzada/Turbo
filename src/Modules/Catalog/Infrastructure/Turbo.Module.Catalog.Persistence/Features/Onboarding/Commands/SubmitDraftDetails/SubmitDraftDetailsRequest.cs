@@ -12,4 +12,4 @@ public sealed record SubmitDraftDetailsRequest(
     FuelType FuelType,
     TransmissionType TransmissionType,
     int Mileage
-) : ICommand<AppConc.Response<DraftStepResponse>>;
+) : ICommand<AppConc.Response<SubmitDraftDetailsResponse>>;

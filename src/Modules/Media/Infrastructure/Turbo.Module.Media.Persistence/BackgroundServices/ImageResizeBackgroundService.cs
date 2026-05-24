@@ -48,29 +48,29 @@ public sealed class ImageResizeBackgroundService(
         var minioService = scope.ServiceProvider.GetRequiredService<IMinioService>();
         var resizeService = scope.ServiceProvider.GetRequiredService<IImageResizeService>();
 
-        var pending = await db.CarImages
-            .Where(x => !x.IsResized)
+        var pending = await db.Medias
+            .Where(m => !m.IsResized)
             .Take(_settings.BatchSize)
             .ToListAsync(ct);
 
         if (pending.Count == 0)
             return;
 
-        logger.LogInformation("Resizing {Count} pending image(s)", pending.Count);
+        logger.LogInformation("Resizing {Count} pending media item(s)", pending.Count);
 
-        foreach (var image in pending)
+        foreach (var media in pending)
         {
             try
             {
-                var original = await minioService.DownloadAsync(image.ObjectKey, ct);
+                var original = await minioService.DownloadAsync(media.ObjectKey, ct);
 
-                var ext = Path.GetExtension(image.ObjectKey).TrimStart('.').ToLowerInvariant();
+                var ext = Path.GetExtension(media.ObjectKey).TrimStart('.').ToLowerInvariant();
                 var originalContentType = ext switch
                 {
-                    "png" => "image/png",
-                    "gif" => "image/gif",
+                    "png"  => "image/png",
+                    "gif"  => "image/gif",
                     "webp" => "image/webp",
-                    _ => "image/jpeg"
+                    _      => "image/jpeg"
                 };
 
                 var (resized, contentType) = await resizeService.ResizeAsync(
@@ -82,14 +82,14 @@ public sealed class ImageResizeBackgroundService(
                 );
 
                 using var stream = new MemoryStream(resized);
-                await minioService.UploadAsync(image.ObjectKey, stream, contentType, ct);
+                await minioService.UploadAsync(media.ObjectKey, stream, contentType, ct);
 
-                image.SetResized();
+                media.SetResized();
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to resize image {ImageId} (ObjectKey: {ObjectKey})",
-                    image.Id, image.ObjectKey);
+                logger.LogError(ex, "Failed to resize media {MediaId} (ObjectKey: {ObjectKey})",
+                    media.Id, media.ObjectKey);
             }
         }
 

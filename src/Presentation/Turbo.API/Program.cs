@@ -4,19 +4,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Turbo.Module.Catalog.Persistence.Contexts;
-using Turbo.Module.Catalog.Persistence.Features.Brand;
 using Turbo.Module.Catalog.Persistence.Features.Brand.Commands.CreateBrand;
 using Turbo.Module.Catalog.Persistence.Features.Brand.Commands.DeleteBrand;
 using Turbo.Module.Catalog.Persistence.Features.Brand.Commands.UpdateBrand;
 using Turbo.Module.Catalog.Persistence.Features.Brand.Queries.GetAllBrands;
 using Turbo.Module.Catalog.Persistence.Features.Brand.Queries.GetBrandById;
-using Turbo.Module.Catalog.Persistence.Features.Model;
 using Turbo.Module.Catalog.Persistence.Features.Model.Commands.CreateModel;
 using Turbo.Module.Catalog.Persistence.Features.Model.Commands.DeleteModel;
 using Turbo.Module.Catalog.Persistence.Features.Model.Commands.UpdateModel;
 using Turbo.Module.Catalog.Persistence.Features.Model.Queries.GetAllModels;
 using Turbo.Module.Catalog.Persistence.Features.Model.Queries.GetModelById;
-using Turbo.Module.Catalog.Persistence.Features.Onboarding;
 using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.CreateDraft;
 using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftDetails;
 using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftImages;
@@ -25,7 +22,9 @@ using Turbo.Module.Catalog.Persistence.Features.Onboarding.Queries.GetDraft;
 using Turbo.Module.Catalog.Persistence.Features.Onboarding.Queries.GetOnboardingConfig;
 using Turbo.Module.Media.DependencyInjection.Extensions;
 using Turbo.Shared.Application.Abstraction;
+using Turbo.Shared.Application.Pipeline;
 using Turbo.Shared.Infrastructure.Implementations;
+using Turbo.Shared.Infrastructure.Pipeline;
 using Turbo.Shared.Infrastructure.Settings;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
@@ -51,7 +50,14 @@ builder.Services.AddOpenApi(options =>
 // ── Options ──────────────────────────────────────────────────────────────────
 builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMq"));
 
-// ── Catalog ──────────────────────────────────────────────────────────────────
+// ── Dispatchers ───────────────────────────────────────────────────────────────
+builder.Services.AddScoped<ICommandDispatcher, CommandDispatcher>();
+builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
+
+// ── Pipeline behaviors ────────────────────────────────────────────────────────
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
+
+// ── Catalog DbContexts ────────────────────────────────────────────────────────
 builder.Services.AddDbContext<CommandDbContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("CommandDb"))
 );
@@ -60,26 +66,22 @@ builder.Services.AddDbContext<QueryDbContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("QueryDb"))
 );
 
-builder.Services.AddScoped<ICommandDispatcher, CommandDispatcher>();
-builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
-
-// Brand queries
+// ── Brand ─────────────────────────────────────────────────────────────────────
 builder.Services.AddScoped<
-    IQueryHandler<GetAllBrandsRequest, AppConc.Response<IReadOnlyList<BrandResponse>>>,
+    IQueryHandler<GetAllBrandsRequest, AppConc.Response<IReadOnlyList<GetAllBrandsResponse>>>,
     GetAllBrandsHandler>();
 
 builder.Services.AddScoped<
-    IQueryHandler<GetBrandByIdRequest, AppConc.Response<BrandResponse>>,
+    IQueryHandler<GetBrandByIdRequest, AppConc.Response<GetBrandByIdResponse>>,
     GetBrandByIdHandler>();
 
-// Brand commands
 builder.Services.AddScoped<
-    ICommandHandler<CreateBrandRequest, AppConc.Response<BrandResponse>>,
+    ICommandHandler<CreateBrandRequest, AppConc.Response<CreateBrandResponse>>,
     CreateBrandHandler>();
 builder.Services.AddScoped<IValidator<CreateBrandRequest>, CreateBrandValidator>();
 
 builder.Services.AddScoped<
-    ICommandHandler<UpdateBrandRequest, AppConc.Response<BrandResponse>>,
+    ICommandHandler<UpdateBrandRequest, AppConc.Response<UpdateBrandResponse>>,
     UpdateBrandHandler>();
 builder.Services.AddScoped<IValidator<UpdateBrandRequest>, UpdateBrandValidator>();
 
@@ -87,23 +89,22 @@ builder.Services.AddScoped<
     ICommandHandler<DeleteBrandRequest, AppConc.Response>,
     DeleteBrandHandler>();
 
-// Model queries
+// ── Model ─────────────────────────────────────────────────────────────────────
 builder.Services.AddScoped<
-    IQueryHandler<GetAllModelsRequest, AppConc.Response<IReadOnlyList<ModelResponse>>>,
+    IQueryHandler<GetAllModelsRequest, AppConc.Response<IReadOnlyList<GetAllModelsResponse>>>,
     GetAllModelsHandler>();
 
 builder.Services.AddScoped<
-    IQueryHandler<GetModelByIdRequest, AppConc.Response<ModelResponse>>,
+    IQueryHandler<GetModelByIdRequest, AppConc.Response<GetModelByIdResponse>>,
     GetModelByIdHandler>();
 
-// Model commands
 builder.Services.AddScoped<
-    ICommandHandler<CreateModelRequest, AppConc.Response<ModelResponse>>,
+    ICommandHandler<CreateModelRequest, AppConc.Response<CreateModelResponse>>,
     CreateModelHandler>();
 builder.Services.AddScoped<IValidator<CreateModelRequest>, CreateModelValidator>();
 
 builder.Services.AddScoped<
-    ICommandHandler<UpdateModelRequest, AppConc.Response<ModelResponse>>,
+    ICommandHandler<UpdateModelRequest, AppConc.Response<UpdateModelResponse>>,
     UpdateModelHandler>();
 builder.Services.AddScoped<IValidator<UpdateModelRequest>, UpdateModelValidator>();
 
@@ -111,26 +112,26 @@ builder.Services.AddScoped<
     ICommandHandler<DeleteModelRequest, AppConc.Response>,
     DeleteModelHandler>();
 
-// Onboarding commands
+// ── Onboarding commands ───────────────────────────────────────────────────────
 builder.Services.AddScoped<
     ICommandHandler<CreateDraftRequest, AppConc.Response<CreateDraftResponse>>,
     CreateDraftHandler>();
 
 builder.Services.AddScoped<
-    ICommandHandler<SubmitDraftImagesRequest, AppConc.Response<DraftStepResponse>>,
+    ICommandHandler<SubmitDraftImagesRequest, AppConc.Response<SubmitDraftImagesResponse>>,
     SubmitDraftImagesHandler>();
 
 builder.Services.AddScoped<
-    ICommandHandler<SubmitDraftDetailsRequest, AppConc.Response<DraftStepResponse>>,
+    ICommandHandler<SubmitDraftDetailsRequest, AppConc.Response<SubmitDraftDetailsResponse>>,
     SubmitDraftDetailsHandler>();
 builder.Services.AddScoped<IValidator<SubmitDraftDetailsRequest>, SubmitDraftDetailsValidator>();
 
 builder.Services.AddScoped<
-    ICommandHandler<SubmitDraftPricingRequest, AppConc.Response<DraftStepResponse>>,
+    ICommandHandler<SubmitDraftPricingRequest, AppConc.Response<SubmitDraftPricingResponse>>,
     SubmitDraftPricingHandler>();
 builder.Services.AddScoped<IValidator<SubmitDraftPricingRequest>, SubmitDraftPricingValidator>();
 
-// Onboarding queries
+// ── Onboarding queries ────────────────────────────────────────────────────────
 builder.Services.AddScoped<
     IQueryHandler<GetOnboardingConfigRequest, AppConc.Response<GetOnboardingConfigResponse>>,
     GetOnboardingConfigHandler>();
@@ -139,10 +140,10 @@ builder.Services.AddScoped<
     IQueryHandler<GetDraftRequest, AppConc.Response<GetDraftResponse>>,
     GetDraftHandler>();
 
-// ── Media ────────────────────────────────────────────────────────────────────
+// ── Media ─────────────────────────────────────────────────────────────────────
 builder.Services.AddMediaModule(builder.Configuration);
 
-// ── MassTransit / RabbitMQ ───────────────────────────────────────────────────
+// ── MassTransit / RabbitMQ ────────────────────────────────────────────────────
 var rabbit = builder.Configuration.GetSection("RabbitMq");
 
 builder.Services.AddMassTransit(x =>

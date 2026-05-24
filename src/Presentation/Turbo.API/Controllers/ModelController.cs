@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Turbo.API.Extensions;
-using Turbo.Module.Catalog.Persistence.Features.Model;
 using Turbo.Module.Catalog.Persistence.Features.Model.Commands.CreateModel;
 using Turbo.Module.Catalog.Persistence.Features.Model.Commands.DeleteModel;
 using Turbo.Module.Catalog.Persistence.Features.Model.Commands.UpdateModel;
@@ -24,42 +23,42 @@ public sealed class ModelController(
 {
     /// <summary>Returns all models, optionally filtered by brand.</summary>
     [HttpGet]
-    [ProducesResponseType(typeof(SuccessResponse<IReadOnlyList<ModelResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SuccessResponse<IReadOnlyList<GetAllModelsResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] Guid? brandId, CancellationToken ct)
     {
         var result = await queryDispatcher
-            .DispatchAsync<GetAllModelsRequest, AppConc.Response<IReadOnlyList<ModelResponse>>>(
+            .DispatchAsync<GetAllModelsRequest, AppConc.Response<IReadOnlyList<GetAllModelsResponse>>>(
                 new GetAllModelsRequest(brandId), ct);
         return this.HandleServiceResponse(result);
     }
 
     /// <summary>Returns a single model by ID.</summary>
     [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(SuccessResponse<ModelResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SuccessResponse<GetModelByIdResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById([FromRoute] Guid id, CancellationToken ct)
     {
         var result = await queryDispatcher
-            .DispatchAsync<GetModelByIdRequest, AppConc.Response<ModelResponse>>(
+            .DispatchAsync<GetModelByIdRequest, AppConc.Response<GetModelByIdResponse>>(
                 new GetModelByIdRequest(id), ct);
         return this.HandleServiceResponse(result);
     }
 
     /// <summary>Creates a new model under a brand.</summary>
     [HttpPost]
-    [ProducesResponseType(typeof(CreatedResponse<ModelResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(CreatedResponse<CreateModelResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Create([FromBody] CreateModelRequest request, CancellationToken ct)
     {
         var result = await commandDispatcher
-            .DispatchAsync<CreateModelRequest, AppConc.Response<ModelResponse>>(request, ct);
+            .DispatchAsync<CreateModelRequest, AppConc.Response<CreateModelResponse>>(request, ct);
         return this.HandleServiceResponse(result);
     }
 
     /// <summary>Updates an existing model.</summary>
     [HttpPut("{id:guid}")]
-    [ProducesResponseType(typeof(SuccessResponse<ModelResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SuccessResponse<UpdateModelResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(
@@ -68,7 +67,7 @@ public sealed class ModelController(
         CancellationToken ct)
     {
         var result = await commandDispatcher
-            .DispatchAsync<UpdateModelRequest, AppConc.Response<ModelResponse>>(
+            .DispatchAsync<UpdateModelRequest, AppConc.Response<UpdateModelResponse>>(
                 new UpdateModelRequest(id, request.Name, request.BrandId), ct);
         return this.HandleServiceResponse(result);
     }
