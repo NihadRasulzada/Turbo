@@ -4,34 +4,37 @@ using Turbo.Module.Identity.Domain.Entity;
 using Turbo.Module.Identity.Domain.Events;
 using Microsoft.EntityFrameworkCore;
 using Turbo.Module.Identity.Domain.Exceptions;
+using Microsoft.AspNetCore.Identity;
 
 namespace Turbo.Module.Identity.Application.Features.Auth.Commands.Register;
 
 public class RegisterUserHandler(
-    IWriteDbContext writeDb,
-    IPasswordHasher passwordHasher,
+    UserManager<AppUser> userManager,
     IEventPublisher eventPublisher
 ) : IRequestHandler<RegisterUserCommand, RegisterUserResult>
 {
     public async Task<RegisterUserResult> Handle(
         RegisterUserCommand request, CancellationToken cancellationToken)
     {
-        var exists = await writeDb.Users
-            .AnyAsync(u => u.Email == request.Email.ToLowerInvariant(), cancellationToken);
+        var exists = await userManager.FindByEmailAsync(request.Email);
 
-        if (exists)
+        if (exists is not null)
             throw new EmailAlreadyExistsException(request.Email);
 
-        var passwordHash = passwordHasher.Hash(request.Password);
-        var user = User.Create(request.Email, passwordHash, request.FirstName, request.LastName);
+        var user = AppUser.Create(request.Email, request.FirstName, request.LastName);
 
-        writeDb.Users.Add(user);
-        await writeDb.SaveChangesAsync(cancellationToken);
+        var result = await userManager.CreateAsync(user, request.Password);
+
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            throw new InvalidOperationException($"User creation failed: {errors}");
+        }
 
         await eventPublisher.PublishAsync(new UserRegisteredEvent(
-            user.Id, user.Email, user.FirstName, user.LastName, user.CreatedAt
+            user.Id, user.Email!, user.FirstName, user.LastName, DateTime.UtcNow
         ), cancellationToken);
 
-        return new RegisterUserResult(user.Id, user.Email);
+        return new RegisterUserResult(user.Id, user.Email!);
     }
 }

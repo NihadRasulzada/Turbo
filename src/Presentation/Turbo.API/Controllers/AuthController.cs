@@ -3,6 +3,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Turbo.Module.Identity.Application.Common.Interfaces;
+using Turbo.Module.Identity.Application.DTOs;
 using Turbo.Module.Identity.Application.Features.Auth.Commands.ChangePassword;
 using Turbo.Module.Identity.Application.Features.Auth.Commands.Register;
 using Turbo.Module.Identity.Application.Features.Auth.Queries.Login;
@@ -12,42 +14,39 @@ namespace Turbo.API.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(IMediator mediator) : ControllerBase
+public class AuthController(IUserService userService) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register(
-        [FromBody] RegisterUserCommand command, CancellationToken ct)
+        [FromBody] RegisterRequestDto request, CancellationToken ct)
     {
-        var result = await mediator.Send(command, ct);
+        var result = await userService.RegisterAsync(request, ct);
         return CreatedAtAction(nameof(Register), new { result.UserId }, result);
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login(
-        [FromBody] LoginQuery query, CancellationToken ct)
+        [FromBody] LoginRequestDto request, CancellationToken ct)
     {
-        var result = await mediator.Send(query, ct);
+        var result = await userService.LoginAsync(request, ct);
         return Ok(result);
     }
 
     [HttpPost("refresh-token")]
     public async Task<IActionResult> RefreshToken(
-        [FromBody] RefreshTokenQuery query, CancellationToken ct)
+        [FromBody] RefreshTokenRequestDto request, CancellationToken ct)
     {
-        var result = await mediator.Send(query, ct);
+        var result = await userService.RefreshTokenAsync(request, ct);
         return Ok(result);
     }
 
     [HttpPost("change-password")]
     [Authorize]
     public async Task<IActionResult> ChangePassword(
-        [FromBody] ChangePasswordRequest request, CancellationToken ct)
+        [FromBody] ChangePasswordRequestDto request, CancellationToken ct)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var command = new ChangePasswordCommand(userId, request.CurrentPassword, request.NewPassword);
-        await mediator.Send(command, ct);
+        await userService.ChangePasswordAsync(userId, request, ct);
         return NoContent();
     }
 }
-
-public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
