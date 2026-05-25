@@ -1,8 +1,7 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using MailKit.Net.Smtp;
 using MailKit.Security;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -23,11 +22,15 @@ public sealed class EmailConsumerWorker(
     private readonly RabbitMqOptions _rabbit = rabbitOptions.Value;
     private readonly EmailOptions _email = emailOptions.Value;
 
+    private const string QueueName = "user_registered";
+    private const int MaxConnectionAttempts = 10;
+
     private IConnection? _connection;
     private IChannel? _channel;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // RabbitMQ hazır olmasa (Docker Compose race) retry ilə gözlə
         var factory = new ConnectionFactory
         {
             HostName = _rabbit.Host,
@@ -36,11 +39,35 @@ public sealed class EmailConsumerWorker(
             Password = _rabbit.Password
         };
 
-        _connection = await factory.CreateConnectionAsync(stoppingToken);
+        for (int attempt = 1; attempt <= MaxConnectionAttempts; attempt++)
+        {
+            try
+            {
+                _connection = await factory.CreateConnectionAsync(stoppingToken);
+                break;
+            }
+            catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+            {
+                var delay = TimeSpan.FromSeconds(Math.Min(30, attempt * 3));
+                logger.LogWarning(ex,
+                    "RabbitMQ bağlantı cəhdi {Attempt}/{Max} uğursuz oldu. {Delay}s gözlənilir.",
+                    attempt, MaxConnectionAttempts, delay.TotalSeconds);
+                await Task.Delay(delay, stoppingToken);
+            }
+        }
+
+        if (_connection is null)
+        {
+            logger.LogCritical(
+                "RabbitMQ-ya {Max} cəhddən sonra qoşulmaq mümkün olmadı. " +
+                "Email worker işə başlamayacaq.", MaxConnectionAttempts);
+            return;
+        }
+
         _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
 
         await _channel.QueueDeclareAsync(
-            queue: "user_registered",
+            queue: QueueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
@@ -57,17 +84,19 @@ public sealed class EmailConsumerWorker(
                 if (evt is not null)
                     await SendWelcomeEmailAsync(evt, stoppingToken);
 
-                await _channel.BasicAckAsync(ea.DeliveryTag, false, stoppingToken);
+                await _channel.BasicAckAsync(ea.DeliveryTag, multiple: false, stoppingToken);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to send welcome email.");
-                await _channel.BasicNackAsync(ea.DeliveryTag, false, true, stoppingToken);
+                logger.LogError(ex, "Xoş gəldin emaili göndərilə bilmədi. Mesaj rədd edilir (requeue: false).");
+                // requeue: false — poison message-ı sonsuz loop-a salmaq əvəzinə at;
+                // DLX konfiqurasiyası varsa ora yönləndiriləcək.
+                await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false, stoppingToken);
             }
         };
 
         await _channel.BasicConsumeAsync(
-            queue: "user_registered",
+            queue: QueueName,
             autoAck: false,
             consumer: consumer,
             cancellationToken: stoppingToken);
@@ -96,13 +125,13 @@ public sealed class EmailConsumerWorker(
         await client.SendAsync(message, ct);
         await client.DisconnectAsync(true, ct);
 
-        logger.LogInformation("Welcome email sent to {Email}", evt.Email);
+        logger.LogInformation("Xoş gəldin emaili göndərildi: {Email}", evt.Email);
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        if (_channel != null) await _channel.DisposeAsync();
-        if (_connection != null) await _connection.DisposeAsync();
+        if (_channel is not null) await _channel.DisposeAsync();
+        if (_connection is not null) await _connection.DisposeAsync();
         await base.StopAsync(cancellationToken);
     }
 }

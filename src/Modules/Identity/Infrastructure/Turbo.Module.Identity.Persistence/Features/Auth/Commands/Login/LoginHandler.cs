@@ -34,6 +34,7 @@ public sealed class LoginHandler(
 
         if (!passwordHasher.Verify(command.Password, user.PasswordHash))
         {
+            // Uğursuz cəhdi yaz; hər halda yeni Attach-dan istifadə et
             writeDb.Attach(user);
             user.RecordFailedLogin();
             if (user.FailedLoginCount >= MaxFailedAttempts)
@@ -43,17 +44,23 @@ public sealed class LoginHandler(
             return AppConc.Response<LoginResponse>.Unauthorized("Email or password is incorrect.");
         }
 
+        // Uğurlu giriş: sayğacı sıfırla, bitmiş blok varsa bayrağı da təmizlə
         writeDb.Attach(user);
-        user.ResetFailedLogin();
+        user.OnSuccessfulLogin();
 
+        // Access token və onun bitim tarixi eyni anda hesablanır
         var accessToken = jwtService.GenerateAccessToken(user);
+        var accessTokenExpiresAt = jwtService.GetAccessTokenExpiresAt();
+
         var refreshTokenValue = jwtService.GenerateRefreshToken();
         var refreshToken = new RefreshTokenEntity(user.Id, refreshTokenValue);
+        var refreshTokenExpiresAt =
+            DateTimeOffset.FromUnixTimeSeconds(refreshToken.ExpiresAtSeconds).UtcDateTime;
 
         writeDb.Add(refreshToken);
         await writeDb.SaveChangesAsync(ct);
 
         return AppConc.Response<LoginResponse>.Success(
-            new LoginResponse(accessToken, refreshTokenValue, user.Id));
+            new LoginResponse(accessToken, accessTokenExpiresAt, refreshTokenValue, refreshTokenExpiresAt, user.Id));
     }
 }

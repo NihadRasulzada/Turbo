@@ -25,17 +25,33 @@ public sealed class RefreshTokenHandler(
             return AppConc.Response<RefreshTokenResponse>.Unauthorized(
                 "Refresh token is invalid or expired.");
 
+        // Bloklanmış və ya deaktiv user yeni token ala bilməz
+        if (!existing.User.IsActive)
+            return AppConc.Response<RefreshTokenResponse>.Unauthorized(
+                "Refresh token is invalid or expired.");
+
+        if (existing.User.IsCurrentlyBlocked())
+            return AppConc.Response<RefreshTokenResponse>.Forbidden(
+                "User is blocked. Please contact support.");
+
+        // Köhnə tokeni revoke et; User navigation-u ayrıca Attach etmə
+        // (Include ilə yüklənmiş qraf writeDb-yə birlikdə gəlir)
         writeDb.Attach(existing);
         existing.Revoke();
 
         var newTokenValue = jwtService.GenerateRefreshToken();
         var newToken = new RefreshTokenEntity(existing.UserId, newTokenValue);
+        var refreshTokenExpiresAt =
+            DateTimeOffset.FromUnixTimeSeconds(newToken.ExpiresAtSeconds).UtcDateTime;
         writeDb.Add(newToken);
 
         await writeDb.SaveChangesAsync(ct);
 
+        // Access token və onun bitim tarixi eyni anda hesablanır
         var accessToken = jwtService.GenerateAccessToken(existing.User);
+        var accessTokenExpiresAt = jwtService.GetAccessTokenExpiresAt();
+
         return AppConc.Response<RefreshTokenResponse>.Success(
-            new RefreshTokenResponse(accessToken, newTokenValue));
+            new RefreshTokenResponse(accessToken, accessTokenExpiresAt, newTokenValue, refreshTokenExpiresAt));
     }
 }

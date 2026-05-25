@@ -81,6 +81,7 @@ public static class IdentityModuleExtensions
         services.AddScoped<
             ICommandHandler<BlockUserRequest, AppConc.Response>,
             BlockUserHandler>();
+        services.AddScoped<IValidator<BlockUserRequest>, BlockUserValidator>();
 
         services.AddScoped<
             ICommandHandler<UnblockUserRequest, AppConc.Response>,

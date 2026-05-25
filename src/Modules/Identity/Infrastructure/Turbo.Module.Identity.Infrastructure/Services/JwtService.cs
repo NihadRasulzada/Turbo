@@ -1,8 +1,7 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Turbo.Module.Identity.Application.Common.Interfaces;
@@ -22,11 +21,15 @@ public sealed class JwtService(IOptions<JwtOptions> options) : IJwtService
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            // ClaimTypes.NameIdentifier istifadə edilir ki User.FindFirstValue(ClaimTypes.NameIdentifier)
+            // MapInboundClaims konfiqurasiyasından asılı olmayaraq həmişə işləsin.
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Sub,   user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName),
-            new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.GivenName,   user.FirstName),
+            new Claim(JwtRegisteredClaimNames.FamilyName,  user.LastName),
+            new Claim(JwtRegisteredClaimNames.Jti,   Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.Role, user.IsAdmin ? "Admin" : "Member"),
         };
 
         var token = new JwtSecurityToken(
@@ -44,4 +47,7 @@ public sealed class JwtService(IOptions<JwtOptions> options) : IJwtService
         var bytes = RandomNumberGenerator.GetBytes(64);
         return Convert.ToBase64String(bytes);
     }
+
+    public DateTime GetAccessTokenExpiresAt() =>
+        DateTime.UtcNow.AddMinutes(_opts.AccessTokenExpiryMinutes);
 }
