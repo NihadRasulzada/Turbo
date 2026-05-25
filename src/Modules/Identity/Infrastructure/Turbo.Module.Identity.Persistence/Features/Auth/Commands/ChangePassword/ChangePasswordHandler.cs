@@ -11,6 +11,7 @@ using Turbo.Module.Identity.Persistence.Context;
 
 namespace Turbo.Module.Identity.Persistence.Features.Auth.Commands.ChangePassword;
 
+
 public sealed class ChangePasswordHandler(
     IdentityQueryContext queryDb,
     IdentityCommandContext commandDb,
@@ -24,10 +25,8 @@ public sealed class ChangePasswordHandler(
             .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken)
             ?? throw new UserNotFoundException(request.UserId);
 
-        var result = await userManager.ChangePasswordAsync(
-            user,
-            request.CurrentPassword,
-            request.NewPassword);
+        if (!passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
+            throw new InvalidCredentialsException();
 
         var trackedUser = await commandDb.Users
             .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken)
