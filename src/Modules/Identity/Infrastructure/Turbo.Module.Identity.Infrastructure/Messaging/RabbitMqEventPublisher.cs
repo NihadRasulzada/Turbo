@@ -1,13 +1,19 @@
 ﻿using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using Turbo.Module.Identity.Application.Common.Interfaces;
+using Turbo.Module.Identity.Domain.Events;
+using Turbo.Module.Identity.Infrastructure.Options;
 
 namespace Turbo.Module.Identity.Infrastructure.Messaging;
 
-public class RabbitMqEventPublisher(IConfiguration config) : IEventPublisher, IAsyncDisposable
+public sealed class RabbitMqEventPublisher(
+    IOptions<RabbitMqOptions> options
+) : IEventPublisher, IAsyncDisposable
 {
+    private readonly RabbitMqOptions _opts = options.Value;
     private IConnection? _connection;
     private IChannel? _channel;
 
@@ -17,10 +23,10 @@ public class RabbitMqEventPublisher(IConfiguration config) : IEventPublisher, IA
 
         var factory = new ConnectionFactory
         {
-            HostName = config["RabbitMQ:Host"] ?? "localhost",
-            Port = int.Parse(config["RabbitMQ:Port"] ?? "5672"),
-            UserName = config["RabbitMQ:Username"] ?? "guest",
-            Password = config["RabbitMQ:Password"] ?? "guest"
+            HostName = _opts.Host,
+            Port = _opts.Port,
+            UserName = _opts.Username,
+            Password = _opts.Password
         };
 
         _connection = await factory.CreateConnectionAsync();
@@ -28,16 +34,14 @@ public class RabbitMqEventPublisher(IConfiguration config) : IEventPublisher, IA
     }
 
     public async Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
-        where T : class
+        where T : DomainEvent
     {
         await EnsureConnectedAsync();
 
-        var routingKey = typeof(T).Name
-            .Replace("Event", string.Empty)
-            .ToLower()
-            .Insert(4, ".");  // "UserRegistered" → "user.registered"
-
-        var queue = routingKey.Replace(".", "_");
+        var eventType = typeof(T).Name.Replace("Event", string.Empty);
+        var queue = string.Concat(
+            eventType.Select((c, i) => i > 0 && char.IsUpper(c) ? "_" + c : c.ToString())
+        ).ToLowerInvariant();
 
         await _channel!.QueueDeclareAsync(
             queue: queue,
@@ -47,8 +51,8 @@ public class RabbitMqEventPublisher(IConfiguration config) : IEventPublisher, IA
             cancellationToken: cancellationToken);
 
         var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(@event));
-
         var props = new BasicProperties { Persistent = true };
+
         await _channel.BasicPublishAsync(
             exchange: string.Empty,
             routingKey: queue,

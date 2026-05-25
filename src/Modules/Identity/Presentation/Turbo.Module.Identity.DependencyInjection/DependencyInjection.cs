@@ -1,34 +1,63 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FluentValidation;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Turbo.Module.Identity.Application.Common.Interfaces;
+using Turbo.Module.Identity.Infrastructure.EmailWorker;
 using Turbo.Module.Identity.Infrastructure.Messaging;
+using Turbo.Module.Identity.Infrastructure.Options;
 using Turbo.Module.Identity.Infrastructure.Services;
 using Turbo.Module.Identity.Persistence;
+using Turbo.Module.Identity.Persistence.Context;
+using Turbo.Module.Identity.Persistence.Middleware;
 
 namespace Turbo.Module.Identity.DependencyInjection;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(
-        this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddIdentityInfrastructure(
+        this IServiceCollection services,
+        IConfiguration config)
     {
-        // Write DB
-        services.AddDbContext<WriteDbContext>(opts =>
-            opts.UseSqlServer(config.GetConnectionString("WriteDb")));
+        // Options
+        services.AddOptions<JwtOptions>()
+            .Bind(config.GetSection(JwtOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
-        services.AddDbContext<ReadDbContext>(opts =>
-            opts.UseSqlServer(config.GetConnectionString("ReadDb")));
+        services.AddOptions<RabbitMqOptions>()
+            .Bind(config.GetSection(RabbitMqOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
-        services.AddScoped<IWriteDbContext>(sp =>
-            sp.GetRequiredService<WriteDbContext>());
-        services.AddScoped<IReadDbContext>(sp =>
-            sp.GetRequiredService<ReadDbContext>());
+        services.AddOptions<EmailOptions>()
+            .Bind(config.GetSection(EmailOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
+        // DbContexts
+        services.AddDbContext<IdentityCommandContext>(opts =>
+            opts.UseSqlServer(config.GetConnectionString("IdentityCommandDb")));
+
+        services.AddDbContext<IdentityQueryContext>(opts =>
+            opts.UseSqlServer(config.GetConnectionString("IdentityQueryDb")));
+
+        // Services
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
-        services.AddScoped<IEventPublisher, RabbitMqEventPublisher>();
+        services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 
+        // MediatR + Validators (Infrastructure assembly-dən)
+        services.AddMediatR(cfg =>
+            cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+
+        
+
+        // Background Workers
+        services.AddHostedService<EmailConsumerWorker>();
+
+        
         return services;
     }
 }

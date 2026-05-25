@@ -1,22 +1,28 @@
 ﻿using System.Text;
 using System.Text.Json;
+using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MimeKit;
-using MailKit.Net.Smtp;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Turbo.Module.Identity.Domain.Events;
+using Turbo.Module.Identity.Infrastructure.Options;
 
 namespace Turbo.Module.Identity.Infrastructure.EmailWorker;
 
-public class EmailConsumerWorker(
-    IConfiguration config,
+public sealed class EmailConsumerWorker(
+    IOptions<RabbitMqOptions> rabbitOptions,
+    IOptions<EmailOptions> emailOptions,
     ILogger<EmailConsumerWorker> logger
 ) : BackgroundService
 {
+    private readonly RabbitMqOptions _rabbit = rabbitOptions.Value;
+    private readonly EmailOptions _email = emailOptions.Value;
+
     private IConnection? _connection;
     private IChannel? _channel;
 
@@ -24,9 +30,10 @@ public class EmailConsumerWorker(
     {
         var factory = new ConnectionFactory
         {
-            HostName = config["RabbitMQ:Host"] ?? "localhost",
-            UserName = config["RabbitMQ:Username"] ?? "guest",
-            Password = config["RabbitMQ:Password"] ?? "guest"
+            HostName = _rabbit.Host,
+            Port = _rabbit.Port,
+            UserName = _rabbit.Username,
+            Password = _rabbit.Password
         };
 
         _connection = await factory.CreateConnectionAsync(stoppingToken);
@@ -54,7 +61,7 @@ public class EmailConsumerWorker(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Email sending failed.");
+                logger.LogError(ex, "Failed to send welcome email.");
                 await _channel.BasicNackAsync(ea.DeliveryTag, false, true, stoppingToken);
             }
         };
@@ -68,14 +75,12 @@ public class EmailConsumerWorker(
         await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 
-    private async Task SendWelcomeEmailAsync(
-        UserRegisteredEvent evt, CancellationToken ct)
+    private async Task SendWelcomeEmailAsync(UserRegisteredEvent evt, CancellationToken ct)
     {
         var message = new MimeMessage();
-        message.From.Add(MailboxAddress.Parse(config["Email:From"]));
+        message.From.Add(MailboxAddress.Parse(_email.From));
         message.To.Add(MailboxAddress.Parse(evt.Email));
         message.Subject = "Xoş gəldiniz!";
-
         message.Body = new TextPart("html")
         {
             Text = $"""
@@ -86,14 +91,8 @@ public class EmailConsumerWorker(
         };
 
         using var client = new SmtpClient();
-        await client.ConnectAsync(
-            config["Email:SmtpHost"],
-            int.Parse(config["Email:SmtpPort"] ?? "587"),
-            SecureSocketOptions.StartTls, ct);
-
-        await client.AuthenticateAsync(
-            config["Email:Username"], config["Email:Password"], ct);
-
+        await client.ConnectAsync(_email.SmtpHost, _email.SmtpPort, SecureSocketOptions.StartTls, ct);
+        await client.AuthenticateAsync(_email.Username, _email.Password, ct);
         await client.SendAsync(message, ct);
         await client.DisconnectAsync(true, ct);
 

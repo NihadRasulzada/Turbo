@@ -1,9 +1,17 @@
 ﻿namespace Turbo.Module.Identity.Domain.Events;
 
-public record UserRegisteredEvent(
-    Guid UserId,
-    string Email,
-    string FirstName,
-    string LastName,
-    DateTime RegisteredAt
-);
+public sealed class UserRegisteredEvent : DomainEvent
+{
+    public Guid UserId { get; }
+    public string Email { get; }
+    public string FirstName { get; }
+    public string LastName { get; }
+
+    public UserRegisteredEvent(Guid userId, string email, string firstName, string lastName)
+    {
+        UserId = userId;
+        Email = email;
+        FirstName = firstName;
+        LastName = lastName;
+    }
+}

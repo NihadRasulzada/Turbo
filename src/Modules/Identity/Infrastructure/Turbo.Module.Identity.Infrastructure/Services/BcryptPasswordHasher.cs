@@ -2,7 +2,7 @@
 
 namespace Turbo.Module.Identity.Infrastructure.Services;
 
-public class BcryptPasswordHasher : IPasswordHasher
+public sealed class BcryptPasswordHasher : IPasswordHasher
 {
     public string Hash(string password) =>
         BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);

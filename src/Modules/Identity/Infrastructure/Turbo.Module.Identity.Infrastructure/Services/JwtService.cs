@@ -3,18 +3,21 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Turbo.Module.Identity.Application.Common.Interfaces;
 using Turbo.Module.Identity.Domain.Entity;
+using Turbo.Module.Identity.Infrastructure.Options;
 
 namespace Turbo.Module.Identity.Infrastructure.Services;
 
-public class JwtService(IConfiguration config) : IJwtService
+public sealed class JwtService(IOptions<JwtOptions> options) : IJwtService
 {
+    private readonly JwtOptions _opts = options.Value;
+
     public string GenerateAccessToken(User user)
     {
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(config["Jwt:SecretKey"]!));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_opts.SecretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -27,13 +30,11 @@ public class JwtService(IConfiguration config) : IJwtService
         };
 
         var token = new JwtSecurityToken(
-            issuer: config["Jwt:Issuer"],
-            audience: config["Jwt:Audience"],
+            issuer: _opts.Issuer,
+            audience: _opts.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(
-                int.Parse(config["Jwt:AccessTokenExpiryMinutes"] ?? "15")),
-            signingCredentials: creds
-        );
+            expires: DateTime.UtcNow.AddMinutes(_opts.AccessTokenExpiryMinutes),
+            signingCredentials: creds);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
