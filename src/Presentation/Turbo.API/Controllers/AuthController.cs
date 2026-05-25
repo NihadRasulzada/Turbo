@@ -187,4 +187,3 @@ public sealed record ChangePasswordRequest(
 
 /// <summary>İstifadəçi bloklama sorğusu.</summary>
 public sealed record BlockUserRequest(int DurationSeconds);
-

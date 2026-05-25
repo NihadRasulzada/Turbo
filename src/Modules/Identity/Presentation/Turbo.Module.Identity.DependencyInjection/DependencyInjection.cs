@@ -53,12 +53,12 @@ public static class DependencyInjection
         services.AddMediatR(cfg =>
             cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
 
-        
+
 
         // Background Workers
         services.AddHostedService<EmailConsumerWorker>();
 
-        
+
         return services;
     }
 }

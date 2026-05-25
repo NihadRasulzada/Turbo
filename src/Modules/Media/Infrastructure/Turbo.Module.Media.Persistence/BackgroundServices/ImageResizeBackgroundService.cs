@@ -46,8 +46,8 @@ public sealed class ImageResizeBackgroundService(
     {
         using var scope = scopeFactory.CreateScope();
         var writeDb = scope.ServiceProvider.GetRequiredService<IMediaWriteDbContext>();
-        var readDb  = scope.ServiceProvider.GetRequiredService<IMediaReadDbContext>();
-        var minioService  = scope.ServiceProvider.GetRequiredService<IMinioService>();
+        var readDb = scope.ServiceProvider.GetRequiredService<IMediaReadDbContext>();
+        var minioService = scope.ServiceProvider.GetRequiredService<IMinioService>();
         var resizeService = scope.ServiceProvider.GetRequiredService<IImageResizeService>();
 
         // Load untracked from read DB; attach to write DB before mutating.
@@ -73,10 +73,10 @@ public sealed class ImageResizeBackgroundService(
                 var ext = Path.GetExtension(media.ObjectKey).TrimStart('.').ToLowerInvariant();
                 var originalContentType = ext switch
                 {
-                    "png"  => "image/png",
-                    "gif"  => "image/gif",
+                    "png" => "image/png",
+                    "gif" => "image/gif",
                     "webp" => "image/webp",
-                    _      => "image/jpeg"
+                    _ => "image/jpeg"
                 };
 
                 var (resized, contentType) = await resizeService.ResizeAsync(
