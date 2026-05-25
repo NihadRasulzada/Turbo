@@ -13,7 +13,6 @@ public class User : BaseEntity
     public string LastName { get; private set; } = string.Empty;
     public bool IsActive { get; private set; }
     public bool IsBlocked { get; private set; }
-    public bool IsAdmin { get; private set; }
     public int FailedLoginCount { get; private set; }
     public long? BlockedUntilSeconds { get; private set; }
 
@@ -37,7 +36,6 @@ public class User : BaseEntity
             LastName = lastName,
             IsActive = true,
             IsBlocked = false,
-            IsAdmin = false,
             FailedLoginCount = 0
         };
     }
@@ -48,10 +46,6 @@ public class User : BaseEntity
     }
 
     public void Deactivate() => IsActive = false;
-
-    public void MakeAdmin() => IsAdmin = true;
-
-    public void RemoveAdmin() => IsAdmin = false;
 
     /// <summary>
     /// Müvəqqəti blok tətbiq edir.

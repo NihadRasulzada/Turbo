@@ -91,10 +91,9 @@ public sealed class AuthController(ICommandDispatcher commandDispatcher) : Contr
     }
 
     /// <summary>
-    /// Admin — müəyyən istifadəçini bloklayır.
+    /// Müəyyən istifadəçini bloklayır.
     /// </summary>
     [HttpPost("users/{userId:guid}/block")]
-    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> BlockUser(
@@ -109,10 +108,9 @@ public sealed class AuthController(ICommandDispatcher commandDispatcher) : Contr
     }
 
     /// <summary>
-    /// Admin — bloklanmış istifadəçini blokdan çıxarır.
+    /// Bloklanmış istifadəçini blokdan çıxarır.
     /// </summary>
     [HttpPost("users/{userId:guid}/unblock")]
-    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UnblockUser(
