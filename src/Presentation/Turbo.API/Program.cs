@@ -62,9 +62,15 @@ builder.Services.AddDbContext<CommandDbContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("CommandDb"))
 );
 
+// QueryDbApp uses the read-only turbo_reader PostgreSQL user at runtime.
+// EF CLI migrations use QueryDb (admin) via QueryDbContextDesignTimeFactory.
 builder.Services.AddDbContext<QueryDbContext>(opt =>
-    opt.UseNpgsql(builder.Configuration.GetConnectionString("QueryDb"))
+    opt.UseNpgsql(builder.Configuration.GetConnectionString("QueryDbApp"))
 );
+
+// ── Catalog DbContext interface aliases ───────────────────────────────────────
+builder.Services.AddScoped<ICatalogWriteDbContext>(sp => sp.GetRequiredService<CommandDbContext>());
+builder.Services.AddScoped<ICatalogReadDbContext>(sp => sp.GetRequiredService<QueryDbContext>());
 
 // ── Brand ─────────────────────────────────────────────────────────────────────
 builder.Services.AddScoped<

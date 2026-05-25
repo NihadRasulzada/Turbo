@@ -1,11 +1,12 @@
-using Microsoft.EntityFrameworkCore;
 using Turbo.Module.Catalog.Persistence.Contexts;
+using Microsoft.EntityFrameworkCore;
+
 using Turbo.Shared.Application.Abstraction;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
 namespace Turbo.Module.Catalog.Persistence.Features.Model.Queries.GetAllModels;
 
-public sealed class GetAllModelsHandler(QueryDbContext db)
+public sealed class GetAllModelsHandler(ICatalogReadDbContext db)
     : IQueryHandler<GetAllModelsRequest, AppConc.Response<IReadOnlyList<GetAllModelsResponse>>>
 {
     public async Task<AppConc.Response<IReadOnlyList<GetAllModelsResponse>>> HandleAsync(

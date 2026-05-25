@@ -1,11 +1,12 @@
-using Microsoft.EntityFrameworkCore;
 using Turbo.Module.Catalog.Persistence.Contexts;
+using Microsoft.EntityFrameworkCore;
+
 using Turbo.Shared.Application.Abstraction;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
 namespace Turbo.Module.Catalog.Persistence.Features.Brand.Queries.GetBrandById;
 
-public sealed class GetBrandByIdHandler(QueryDbContext db)
+public sealed class GetBrandByIdHandler(ICatalogReadDbContext db)
     : IQueryHandler<GetBrandByIdRequest, AppConc.Response<GetBrandByIdResponse>>
 {
     public async Task<AppConc.Response<GetBrandByIdResponse>> HandleAsync(

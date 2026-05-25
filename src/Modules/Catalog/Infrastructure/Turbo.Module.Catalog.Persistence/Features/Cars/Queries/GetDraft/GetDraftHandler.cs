@@ -1,11 +1,12 @@
-using Microsoft.EntityFrameworkCore;
 using Turbo.Module.Catalog.Persistence.Contexts;
+using Microsoft.EntityFrameworkCore;
+
 using Turbo.Shared.Application.Abstraction;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
 namespace Turbo.Module.Catalog.Persistence.Features.Cars.Queries.GetDraft;
 
-public sealed class GetDraftHandler(QueryDbContext db)
+public sealed class GetDraftHandler(ICatalogReadDbContext db)
     : IQueryHandler<GetDraftRequest, AppConc.Response<GetDraftResponse>>
 {
     public async Task<AppConc.Response<GetDraftResponse>> HandleAsync(

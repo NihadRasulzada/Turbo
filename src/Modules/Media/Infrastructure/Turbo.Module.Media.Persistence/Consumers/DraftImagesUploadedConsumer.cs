@@ -7,7 +7,7 @@ using MediaEntity = Turbo.Module.Media.Domain.Entity.Media;
 
 namespace Turbo.Module.Media.Persistence.Consumers;
 
-public sealed class DraftImagesUploadedConsumer(CommandDbContext db, IMinioService minioService)
+public sealed class DraftImagesUploadedConsumer(IMediaWriteDbContext db, IMinioService minioService)
     : IConsumer<DraftImagesUploadedIntegrationEvent>
 {
     public async Task Consume(ConsumeContext<DraftImagesUploadedIntegrationEvent> context)
@@ -26,7 +26,7 @@ public sealed class DraftImagesUploadedConsumer(CommandDbContext db, IMinioServi
             mediaItems.Add(new MediaEntity(message.DraftId, MediaOwnerType.CarDraft, url, objectKey, image.Order));
         }
 
-        db.Medias.AddRange(mediaItems);
+        db.AddRange(mediaItems);
         await db.SaveChangesAsync(ct);
     }
 }

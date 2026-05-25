@@ -3,10 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Turbo.Module.Media.Domain.Enums;
 using Turbo.Module.Media.Persistence.Contexts;
 using Turbo.Shared.Contracts.IntegrationEvents;
+using MediaEntity = Turbo.Module.Media.Domain.Entity.Media;
 
 namespace Turbo.Module.Media.Persistence.Consumers;
 
-public sealed class CarListingPublishedConsumer(CommandDbContext db)
+public sealed class CarListingPublishedConsumer(IMediaWriteDbContext db)
     : IConsumer<CarListingPublishedIntegrationEvent>
 {
     public async Task Consume(ConsumeContext<CarListingPublishedIntegrationEvent> context)
@@ -14,7 +15,8 @@ public sealed class CarListingPublishedConsumer(CommandDbContext db)
         var message = context.Message;
         var ct = context.CancellationToken;
 
-        var draftMediaItems = await db.Medias
+        // Load via write context so the change tracker picks up mutations.
+        var draftMediaItems = await db.Set<MediaEntity>()
             .Where(m => m.OwnerId == message.DraftId && m.OwnerType == MediaOwnerType.CarDraft)
             .ToListAsync(ct);
 

@@ -1,6 +1,9 @@
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
+using Turbo.Module.Catalog.Domain.Entity;
 using Turbo.Module.Catalog.Domain.Enum;
 using Turbo.Module.Catalog.Persistence.Contexts;
+
 using Turbo.Shared.Application.Abstraction;
 using Turbo.Shared.Contracts.IntegrationEvents;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
@@ -8,7 +11,7 @@ using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 namespace Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftImages;
 
 public sealed class SubmitDraftImagesHandler(
-    CommandDbContext db,
+    ICatalogWriteDbContext writeDb,
     IPublishEndpoint publishEndpoint)
     : ICommandHandler<SubmitDraftImagesRequest, AppConc.Response<SubmitDraftImagesResponse>>
 {
@@ -19,7 +22,8 @@ public sealed class SubmitDraftImagesHandler(
         if (command.Images.Count == 0)
             return AppConc.Response<SubmitDraftImagesResponse>.BadRequest("At least one image is required.");
 
-        var draft = await db.CarDrafts.FindAsync([command.DraftId], ct);
+        var draft = await writeDb.Set<CarDraft>()
+            .FirstOrDefaultAsync(d => d.Id == command.DraftId, ct);
         if (draft is null)
             return AppConc.Response<SubmitDraftImagesResponse>.NotFound("Draft not found.");
         if (draft.Status == CarDraftStatus.Completed)
@@ -28,7 +32,7 @@ public sealed class SubmitDraftImagesHandler(
             return AppConc.Response<SubmitDraftImagesResponse>.BadRequest("Images step has already been submitted.");
 
         draft.AdvanceStep();
-        await db.SaveChangesAsync(ct);
+        await writeDb.SaveChangesAsync(ct);
 
         await publishEndpoint.Publish(
             new DraftImagesUploadedIntegrationEvent(command.DraftId, command.Images), ct);

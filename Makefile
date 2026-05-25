@@ -57,15 +57,15 @@ MIGRATIONS_PROJECT_MEDIA    := src/Modules/Media/Infrastructure/Turbo.Module.Med
 
 .PHONY: mig-add
 mig-add:
-	dotnet ef migrations add $(NAME) --project $(MIGRATIONS_PROJECT_$(MODULE)) --startup-project $(API)
+	dotnet ef migrations add $(NAME) --project $(MIGRATIONS_PROJECT_$(MODULE)) --startup-project $(API) --context CommandDbContext
 
 .PHONY: mig-apply
 mig-apply:
-	dotnet ef database update --project $(MIGRATIONS_PROJECT_$(MODULE)) --startup-project $(API)
+	dotnet ef database update --project $(MIGRATIONS_PROJECT_$(MODULE)) --startup-project $(API) --context CommandDbContext
 
 .PHONY: mig-remove
 mig-remove:
-	dotnet ef migrations remove --project $(MIGRATIONS_PROJECT_$(MODULE)) --startup-project $(API)
+	dotnet ef migrations remove --project $(MIGRATIONS_PROJECT_$(MODULE)) --startup-project $(API) --context CommandDbContext
 
 # ── List projects ─────────────────────────────────────────────
 .PHONY: list

@@ -56,8 +56,10 @@ services:
       POSTGRES_DB: ${QUERY_DB_NAME:-turbo_query}
       POSTGRES_USER: ${QUERY_DB_USER:-turbo}
       POSTGRES_PASSWORD: ${QUERY_DB_PASSWORD:-turbo_password}
+      QUERY_READER_PASSWORD: ${QUERY_READER_PASSWORD:-turbo_reader_password}
     volumes:
       - query_db_data:/var/lib/postgresql/data
+      - ./docker/postgres/init/query-db/01-init-reader.sh:/docker-entrypoint-initdb.d/01-init-reader.sh:ro
     ports:
       - "${QUERY_DB_PORT:-5434}:5432"
     healthcheck:

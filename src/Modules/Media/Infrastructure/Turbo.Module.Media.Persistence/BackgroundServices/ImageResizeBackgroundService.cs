@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Turbo.Module.Media.Application.Interfaces;
 using Turbo.Module.Media.Application.Settings;
 using Turbo.Module.Media.Persistence.Contexts;
+using MediaEntity = Turbo.Module.Media.Domain.Entity.Media;
 
 namespace Turbo.Module.Media.Persistence.BackgroundServices;
 
@@ -44,11 +45,12 @@ public sealed class ImageResizeBackgroundService(
     private async Task ProcessBatchAsync(CancellationToken ct)
     {
         using var scope = scopeFactory.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<CommandDbContext>();
+        var db = scope.ServiceProvider.GetRequiredService<IMediaWriteDbContext>();
         var minioService = scope.ServiceProvider.GetRequiredService<IMinioService>();
         var resizeService = scope.ServiceProvider.GetRequiredService<IImageResizeService>();
 
-        var pending = await db.Medias
+        // Load via write context so mutations are tracked before SaveChangesAsync.
+        var pending = await db.Set<MediaEntity>()
             .Where(m => !m.IsResized)
             .Take(_settings.BatchSize)
             .ToListAsync(ct);

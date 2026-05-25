@@ -66,9 +66,15 @@ public static class MediaModuleExtensions
             opt.UseNpgsql(configuration.GetConnectionString("CommandDb"))
         );
 
+        // QueryDbApp uses the read-only turbo_reader PostgreSQL user at runtime.
+        // EF CLI migrations use QueryDb (admin) via QueryDbContextDesignTimeFactory.
         services.AddDbContext<QueryDbContext>(opt =>
-            opt.UseNpgsql(configuration.GetConnectionString("QueryDb"))
+            opt.UseNpgsql(configuration.GetConnectionString("QueryDbApp"))
         );
+
+        // ── Media DbContext interface aliases ─────────────────────────────────
+        services.AddScoped<IMediaWriteDbContext>(sp => sp.GetRequiredService<CommandDbContext>());
+        services.AddScoped<IMediaReadDbContext>(sp => sp.GetRequiredService<QueryDbContext>());
 
         return services;
     }

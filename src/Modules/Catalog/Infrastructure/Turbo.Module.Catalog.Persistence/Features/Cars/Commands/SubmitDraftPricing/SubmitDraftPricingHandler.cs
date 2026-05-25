@@ -1,7 +1,9 @@
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Turbo.Module.Catalog.Domain.Entity;
 using Turbo.Module.Catalog.Domain.Enum;
 using Turbo.Module.Catalog.Persistence.Contexts;
+
 using Turbo.Shared.Application.Abstraction;
 using Turbo.Shared.Contracts.IntegrationEvents;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
@@ -9,7 +11,7 @@ using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 namespace Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftPricing;
 
 public sealed class SubmitDraftPricingHandler(
-    CommandDbContext db,
+    ICatalogWriteDbContext writeDb,
     IPublishEndpoint publishEndpoint)
     : ICommandHandler<SubmitDraftPricingRequest, AppConc.Response<SubmitDraftPricingResponse>>
 {
@@ -17,7 +19,8 @@ public sealed class SubmitDraftPricingHandler(
         SubmitDraftPricingRequest command,
         CancellationToken ct = default)
     {
-        var draft = await db.CarDrafts.FindAsync([command.DraftId], ct);
+        var draft = await writeDb.Set<CarDraft>()
+            .FirstOrDefaultAsync(d => d.Id == command.DraftId, ct);
         if (draft is null)
             return AppConc.Response<SubmitDraftPricingResponse>.NotFound("Draft not found.");
         if (draft.Status == CarDraftStatus.Completed)
@@ -41,9 +44,9 @@ public sealed class SubmitDraftPricingHandler(
             command.Price,
             command.Description);
 
-        await db.Cars.AddAsync(car, ct);
+        writeDb.Add(car);
         draft.Complete();
-        await db.SaveChangesAsync(ct);
+        await writeDb.SaveChangesAsync(ct);
 
         await publishEndpoint.Publish(
             new CarListingPublishedIntegrationEvent(car.Id, command.DraftId), ct);
