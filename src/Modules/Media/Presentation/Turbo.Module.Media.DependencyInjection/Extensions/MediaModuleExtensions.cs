@@ -2,6 +2,7 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
 using Turbo.Module.Media.Application.Interfaces;
@@ -83,5 +84,36 @@ public static class MediaModuleExtensions
     {
         cfg.AddConsumer<DraftImagesUploadedConsumer>();
         cfg.AddConsumer<CarListingPublishedConsumer>();
+    }
+
+    /// <summary>
+    /// Media modulu üçün pending migration-ları hər iki DB-yə tətbiq edir.
+    /// QueryDb (admin) istifadə edilir — QueryDbApp (read-only) yox.
+    /// </summary>
+    public static async Task MigrateMediaAsync(this IServiceProvider services)
+    {
+        var config = services.GetRequiredService<IConfiguration>();
+        var logger = services.GetRequiredService<ILogger<CommandDbContext>>();
+
+        var commandConnStr = config.GetConnectionString("CommandDb")
+            ?? throw new InvalidOperationException("ConnectionStrings:CommandDb tapılmadı.");
+        var queryConnStr = config.GetConnectionString("QueryDb")
+            ?? throw new InvalidOperationException("ConnectionStrings:QueryDb tapılmadı.");
+
+        await using var commandCtx = new CommandDbContext(
+            new DbContextOptionsBuilder<CommandDbContext>()
+                .UseNpgsql(commandConnStr)
+                .Options);
+        logger.LogInformation("[Media] CommandDb migration tətbiq edilir...");
+        await commandCtx.Database.MigrateAsync();
+
+        await using var queryCtx = new QueryDbContext(
+            new DbContextOptionsBuilder<QueryDbContext>()
+                .UseNpgsql(queryConnStr)
+                .Options);
+        logger.LogInformation("[Media] QueryDb migration tətbiq edilir...");
+        await queryCtx.Database.MigrateAsync();
+
+        logger.LogInformation("[Media] Migration tamamlandı.");
     }
 }
