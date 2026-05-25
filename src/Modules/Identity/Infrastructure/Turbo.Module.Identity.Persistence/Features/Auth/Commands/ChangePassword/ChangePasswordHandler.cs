@@ -1,40 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using MediatR;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Turbo.Module.Identity.Application.Common.Interfaces;
-using Turbo.Module.Identity.Domain.Entity;
-using Turbo.Module.Identity.Domain.Exceptions;
-using Turbo.Module.Identity.Persistence.Context;
+using Turbo.Module.Identity.Persistence.Contexts;
+using Turbo.Shared.Application.Abstraction;
+using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
 namespace Turbo.Module.Identity.Persistence.Features.Auth.Commands.ChangePassword;
 
-
 public sealed class ChangePasswordHandler(
-    IdentityQueryContext queryDb,
-    IdentityCommandContext commandDb,
+    IIdentityWriteDbContext writeDb,
+    IIdentityReadDbContext readDb,
     IPasswordHasher passwordHasher
-) : IRequestHandler<ChangePasswordCommand>
+) : ICommandHandler<ChangePasswordRequest, AppConc.Response>
 {
-    public async Task Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
+    public async Task<AppConc.Response> HandleAsync(
+        ChangePasswordRequest command, CancellationToken ct = default)
     {
-        var user = await queryDb.Users
+        var user = await readDb.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken)
-            ?? throw new UserNotFoundException(request.UserId);
+            .FirstOrDefaultAsync(u => u.Id == command.UserId, ct);
 
-        if (!passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
-            throw new InvalidCredentialsException();
+        if (user is null)
+            return AppConc.Response.NotFound($"User '{command.UserId}' not found.");
 
-        var trackedUser = await commandDb.Users
-            .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken)
-            ?? throw new UserNotFoundException(request.UserId);
+        if (!passwordHasher.Verify(command.CurrentPassword, user.PasswordHash))
+            return AppConc.Response.Unauthorized("Current password is incorrect.");
 
-        var newHash = passwordHasher.Hash(request.NewPassword);
-        trackedUser.ChangePassword(newHash);
+        writeDb.Attach(user);
+        var newHash = passwordHasher.Hash(command.NewPassword);
+        user.ChangePassword(newHash);
+        await writeDb.SaveChangesAsync(ct);
 
-        await commandDb.SaveChangesAsync(cancellationToken);
+        return AppConc.Response.Success("Password changed successfully.");
     }
 }

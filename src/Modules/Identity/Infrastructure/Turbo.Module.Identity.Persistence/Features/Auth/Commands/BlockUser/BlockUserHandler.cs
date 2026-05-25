@@ -1,22 +1,29 @@
-﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Turbo.Module.Identity.Domain.Exceptions;
-using Turbo.Module.Identity.Persistence.Context;
+using Turbo.Module.Identity.Persistence.Contexts;
+using Turbo.Shared.Application.Abstraction;
+using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
 namespace Turbo.Module.Identity.Persistence.Features.Auth.Commands.BlockUser;
 
 public sealed class BlockUserHandler(
-    IdentityCommandContext commandDb
-) : IRequestHandler<BlockUserCommand>
+    IIdentityWriteDbContext writeDb,
+    IIdentityReadDbContext readDb
+) : ICommandHandler<BlockUserRequest, AppConc.Response>
 {
-    public async Task Handle(BlockUserCommand request, CancellationToken cancellationToken)
+    public async Task<AppConc.Response> HandleAsync(
+        BlockUserRequest command, CancellationToken ct = default)
     {
-        var user = await commandDb.Users
-            .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken)
-            ?? throw new UserNotFoundException(request.UserId);
+        var user = await readDb.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == command.UserId, ct);
 
-        user.Block(request.DurationSeconds);
+        if (user is null)
+            return AppConc.Response.NotFound($"User '{command.UserId}' not found.");
 
-        await commandDb.SaveChangesAsync(cancellationToken);
+        writeDb.Attach(user);
+        user.Block(command.DurationSeconds);
+        await writeDb.SaveChangesAsync(ct);
+
+        return AppConc.Response.Success("User blocked successfully.");
     }
 }

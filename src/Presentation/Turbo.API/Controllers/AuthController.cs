@@ -1,14 +1,16 @@
-﻿using System.Security.Claims;
-using MediatR;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Turbo.Module.Identity.Application.Common.Models;
+using Turbo.API.Extensions;
 using Turbo.Module.Identity.Persistence.Features.Auth.Commands.BlockUser;
 using Turbo.Module.Identity.Persistence.Features.Auth.Commands.ChangePassword;
+using Turbo.Module.Identity.Persistence.Features.Auth.Commands.Login;
+using Turbo.Module.Identity.Persistence.Features.Auth.Commands.RefreshToken;
 using Turbo.Module.Identity.Persistence.Features.Auth.Commands.Register;
 using Turbo.Module.Identity.Persistence.Features.Auth.Commands.UnblockUser;
-using Turbo.Module.Identity.Persistence.Features.Auth.Queries.Login;
-using Turbo.Module.Identity.Persistence.Features.Auth.Queries.RefreshToken;
+using Turbo.Shared.Application.Abstraction;
+using Turbo.Shared.Web.Controllers;
+using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
 namespace Turbo.API.Controllers;
 
@@ -18,172 +20,117 @@ namespace Turbo.API.Controllers;
 [ApiController]
 [Route("api/auth")]
 [Produces("application/json")]
-public sealed class AuthController(IMediator mediator) : ControllerBase
+public sealed class AuthController(ICommandDispatcher commandDispatcher) : ControllerBase
 {
     /// <summary>
     /// Yeni istifadəçi qeydiyyatı həyata keçirir.
     /// </summary>
-    /// <param name="command">Qeydiyyat məlumatları.</param>
-    /// <param name="ct">Ləğvetmə tokeni.</param>
-    /// <returns>Yeni istifadəçinin ID-si və email-i.</returns>
-    /// <response code="201">İstifadəçi uğurla qeydiyyatdan keçdi.</response>
-    /// <response code="400">Məlumatlar yanlışdır və ya validasiya xətası baş verdi.</response>
-    /// <response code="409">Bu email artıq qeydiyyatdan keçib.</response>
-    /// <response code="500">Server xətası baş verdi.</response>
     [HttpPost("register")]
-    [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(CreatedResponse<RegisterUserResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Register(
-        [FromBody] RegisterUserCommand command,
-        CancellationToken ct)
+        [FromBody] RegisterUserRequest request, CancellationToken ct)
     {
-        var result = await mediator.Send(command, ct);
-        return CreatedAtAction(nameof(Register), new { result.UserId }, result);
+        var result = await commandDispatcher
+            .DispatchAsync<RegisterUserRequest, AppConc.Response<RegisterUserResponse>>(request, ct);
+        return this.HandleServiceResponse(result);
     }
 
     /// <summary>
     /// İstifadəçi girişi həyata keçirir və token qaytarır.
     /// </summary>
-    /// <param name="query">Email və şifrə məlumatları.</param>
-    /// <param name="ct">Ləğvetmə tokeni.</param>
-    /// <returns>Access token, refresh token və istifadəçi ID-si.</returns>
-    /// <response code="200">Giriş uğurlu oldu.</response>
-    /// <response code="400">Məlumatlar yanlışdır və ya validasiya xətası baş verdi.</response>
-    /// <response code="401">Email və ya şifrə yanlışdır.</response>
-    /// <response code="403">İstifadəçi bloklanıb.</response>
-    /// <response code="500">Server xətası baş verdi.</response>
     [HttpPost("login")]
-    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(SuccessResponse<LoginResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Login(
-        [FromBody] LoginQuery query,
-        CancellationToken ct)
+        [FromBody] LoginRequest request, CancellationToken ct)
     {
-        var result = await mediator.Send(query, ct);
-        return Ok(result);
+        var result = await commandDispatcher
+            .DispatchAsync<LoginRequest, AppConc.Response<LoginResponse>>(request, ct);
+        return this.HandleServiceResponse(result);
     }
 
     /// <summary>
     /// Köhnə refresh token ilə yeni access və refresh token alır.
     /// </summary>
-    /// <param name="query">Mövcud refresh token.</param>
-    /// <param name="ct">Ləğvetmə tokeni.</param>
-    /// <returns>Yeni access token və refresh token.</returns>
-    /// <response code="200">Token uğurla yeniləndi.</response>
-    /// <response code="400">Məlumatlar yanlışdır və ya validasiya xətası baş verdi.</response>
-    /// <response code="401">Refresh token etibarsızdır və ya müddəti bitib.</response>
-    /// <response code="500">Server xətası baş verdi.</response>
     [HttpPost("refresh-token")]
-    [ProducesResponseType(typeof(RefreshTokenResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(SuccessResponse<RefreshTokenResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> RefreshToken(
-        [FromBody] RefreshTokenQuery query,
-        CancellationToken ct)
+        [FromBody] RefreshTokenRequest request, CancellationToken ct)
     {
-        var result = await mediator.Send(query, ct);
-        return Ok(result);
+        var result = await commandDispatcher
+            .DispatchAsync<RefreshTokenRequest, AppConc.Response<RefreshTokenResponse>>(request, ct);
+        return this.HandleServiceResponse(result);
     }
 
     /// <summary>
     /// Autentifikasiya olunmuş istifadəçinin şifrəsini dəyişir.
     /// </summary>
-    /// <param name="request">Cari və yeni şifrə məlumatları.</param>
-    /// <param name="ct">Ləğvetmə tokeni.</param>
-    /// <returns>Məzmun yoxdur.</returns>
-    /// <response code="204">Şifrə uğurla dəyişdirildi.</response>
-    /// <response code="400">Məlumatlar yanlışdır, validasiya xətası və ya şifrələr uyğun gəlmir.</response>
-    /// <response code="401">İstifadəçi autentifikasiya olunmayıb və ya cari şifrə yanlışdır.</response>
-    /// <response code="404">İstifadəçi tapılmadı.</response>
-    /// <response code="500">Server xətası baş verdi.</response>
     [HttpPost("change-password")]
     [Authorize]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> ChangePassword(
-        [FromBody] ChangePasswordRequest request,
-        CancellationToken ct)
+        [FromBody] ChangePasswordHttpBody body, CancellationToken ct)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var command = new ChangePasswordCommand(
+        var command = new ChangePasswordRequest(
             userId,
-            request.CurrentPassword,
-            request.NewPassword,
-            request.ConfirmPassword);
-        await mediator.Send(command, ct);
-        return NoContent();
+            body.CurrentPassword,
+            body.NewPassword,
+            body.ConfirmPassword);
+        var result = await commandDispatcher
+            .DispatchAsync<ChangePasswordRequest, AppConc.Response>(command, ct);
+        return this.HandleServiceResponse(result);
     }
 
     /// <summary>
-    /// Adminin müəyyən istifadəçini bloklamasını həyata keçirir.
+    /// Admin — müəyyən istifadəçini bloklayır.
     /// </summary>
-    /// <param name="userId">Bloklanacaq istifadəçinin ID-si.</param>
-    /// <param name="request">Bloklama müddəti (saniyə ilə).</param>
-    /// <param name="ct">Ləğvetmə tokeni.</param>
-    /// <returns>Məzmun yoxdur.</returns>
-    /// <response code="204">İstifadəçi uğurla bloklandı.</response>
-    /// <response code="400">Məlumatlar yanlışdır və ya validasiya xətası baş verdi.</response>
-    /// <response code="401">İcazəsiz giriş.</response>
-    /// <response code="404">İstifadəçi tapılmadı.</response>
-    /// <response code="500">Server xətası baş verdi.</response>
     [HttpPost("users/{userId:guid}/block")]
     [Authorize(Roles = "Admin")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> BlockUser(
         [FromRoute] Guid userId,
-        [FromBody] BlockUserRequest request,
+        [FromBody] BlockUserHttpBody body,
         CancellationToken ct)
     {
-        var command = new BlockUserCommand(userId, request.DurationSeconds);
-        await mediator.Send(command, ct);
-        return NoContent();
+        var command = new BlockUserRequest(userId, body.DurationSeconds);
+        var result = await commandDispatcher
+            .DispatchAsync<BlockUserRequest, AppConc.Response>(command, ct);
+        return this.HandleServiceResponse(result);
     }
 
     /// <summary>
-    /// Adminin bloklanmış istifadəçini blokdan çıxarmasını həyata keçirir.
+    /// Admin — bloklanmış istifadəçini blokdan çıxarır.
     /// </summary>
-    /// <param name="userId">Blokdan çıxarılacaq istifadəçinin ID-si.</param>
-    /// <param name="ct">Ləğvetmə tokeni.</param>
-    /// <returns>Məzmun yoxdur.</returns>
-    /// <response code="204">İstifadəçi uğurla blokdan çıxarıldı.</response>
-    /// <response code="401">İcazəsiz giriş.</response>
-    /// <response code="404">İstifadəçi tapılmadı.</response>
-    /// <response code="500">Server xətası baş verdi.</response>
     [HttpPost("users/{userId:guid}/unblock")]
     [Authorize(Roles = "Admin")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UnblockUser(
-        [FromRoute] Guid userId,
-        CancellationToken ct)
+        [FromRoute] Guid userId, CancellationToken ct)
     {
-        var command = new UnblockUserCommand(userId);
-        await mediator.Send(command, ct);
-        return NoContent();
+        var result = await commandDispatcher
+            .DispatchAsync<UnblockUserRequest, AppConc.Response>(
+                new UnblockUserRequest(userId), ct);
+        return this.HandleServiceResponse(result);
     }
 }
 
-/// <summary>Şifrə dəyişmə sorğusu.</summary>
-public sealed record ChangePasswordRequest(
+/// <summary>Şifrə dəyişmə sorğusunun HTTP body-si.</summary>
+public sealed record ChangePasswordHttpBody(
     string CurrentPassword,
     string NewPassword,
     string ConfirmPassword
 );
 
-/// <summary>İstifadəçi bloklama sorğusu.</summary>
-public sealed record BlockUserRequest(int DurationSeconds);
+/// <summary>İstifadəçi bloklama sorğusunun HTTP body-si.</summary>
+public sealed record BlockUserHttpBody(int DurationSeconds);

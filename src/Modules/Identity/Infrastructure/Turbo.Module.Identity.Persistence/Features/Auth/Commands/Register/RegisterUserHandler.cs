@@ -1,41 +1,43 @@
-﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Turbo.Module.Identity.Application.Common.Interfaces;
 using Turbo.Module.Identity.Domain.Entity;
 using Turbo.Module.Identity.Domain.Events;
-using Turbo.Module.Identity.Domain.Exceptions;
-using Turbo.Module.Identity.Persistence.Context;
+using Turbo.Module.Identity.Persistence.Contexts;
+using Turbo.Shared.Application.Abstraction;
+using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
 namespace Turbo.Module.Identity.Persistence.Features.Auth.Commands.Register;
 
 public sealed class RegisterUserHandler(
-    IdentityCommandContext commandDb,
+    IIdentityWriteDbContext writeDb,
+    IIdentityReadDbContext readDb,
     IPasswordHasher passwordHasher,
     IEventPublisher eventPublisher
-) : IRequestHandler<RegisterUserCommand, RegisterUserResponse>
+) : ICommandHandler<RegisterUserRequest, AppConc.Response<RegisterUserResponse>>
 {
-    public async Task<RegisterUserResponse> Handle(
-        RegisterUserCommand request,
-        CancellationToken cancellationToken)
+    public async Task<AppConc.Response<RegisterUserResponse>> HandleAsync(
+        RegisterUserRequest command, CancellationToken ct = default)
     {
-        var normalizedEmail = request.Email.ToUpperInvariant();
+        var normalizedEmail = command.Email.ToUpperInvariant();
 
-        var exists = await commandDb.Users
-            .AnyAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken);
+        var exists = await readDb.Users
+            .AnyAsync(u => u.NormalizedEmail == normalizedEmail, ct);
 
         if (exists)
-            throw new EmailAlreadyExistsException(request.Email);
+            return AppConc.Response<RegisterUserResponse>.Conflict(
+                $"Email '{command.Email}' is already registered.");
 
-        var passwordHash = passwordHasher.Hash(request.Password);
-        var user = User.Create(request.Email, passwordHash, request.FirstName, request.LastName);
+        var passwordHash = passwordHasher.Hash(command.Password);
+        var user = User.Create(command.Email, passwordHash, command.FirstName, command.LastName);
 
-        commandDb.Users.Add(user);
-        await commandDb.SaveChangesAsync(cancellationToken);
+        writeDb.Add(user);
+        await writeDb.SaveChangesAsync(ct);
 
         await eventPublisher.PublishAsync(
             new UserRegisteredEvent(user.Id, user.Email, user.FirstName, user.LastName),
-            cancellationToken);
+            ct);
 
-        return new RegisterUserResponse(user.Id, user.Email);
+        return AppConc.Response<RegisterUserResponse>.Created(
+            new RegisterUserResponse(user.Id, user.Email));
     }
 }

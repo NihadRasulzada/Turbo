@@ -1,22 +1,21 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.8" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\Core\Turbo.Module.Identity.Application\Turbo.Module.Identity.Application.csproj" />
-    <ProjectReference Include="..\Turbo.Module.Identity.Infrastructure\Turbo.Module.Identity.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Configurations\" />
-  </ItemGroup>
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../Core/Turbo.Module.Identity.Application/Turbo.Module.Identity.Application.csproj" />
+    <ProjectReference Include="../../../../BuildingBlocks/Turbo.Shared.Application/Turbo.Shared.Application.csproj" />
+    <ProjectReference Include="../../../../BuildingBlocks/Turbo.Shared.Infrastructure/Turbo.Shared.Infrastructure.csproj" />
+  </ItemGroup>
 
 </Project>

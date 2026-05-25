@@ -1,19 +1,18 @@
-﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Turbo.Module.Identity.Domain.Entity;
+using Turbo.Shared.Infrastructure.EntityConfiguration;
 
 namespace Turbo.Module.Identity.Persistence.Configurations;
 
-public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
+public sealed class RefreshTokenConfiguration : BaseEntityConfiguration<RefreshToken>
 {
-    public void Configure(EntityTypeBuilder<RefreshToken> builder)
+    public override void Configure(EntityTypeBuilder<RefreshToken> builder)
     {
-        builder.HasKey(rt => rt.Id);
+        base.Configure(builder);
 
         builder.Property(rt => rt.Token)
             .IsRequired()
-            .HasMaxLength(512)
-            .HasColumnType("nvarchar(512)");
+            .HasMaxLength(512);
 
         builder.HasIndex(rt => rt.Token).IsUnique();
 

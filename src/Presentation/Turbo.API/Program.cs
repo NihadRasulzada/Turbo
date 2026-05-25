@@ -6,7 +6,7 @@ using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Turbo.API.Middleware;
 using Turbo.Module.Catalog.DependencyInjection.Extensions;
-using Turbo.Module.Identity.DependencyInjection;
+using Turbo.Module.Identity.DependencyInjection.Extensions;
 using Turbo.Module.Media.DependencyInjection.Extensions;
 using Turbo.Shared.Application.Abstraction;
 using Turbo.Shared.Application.Pipeline;
@@ -66,7 +66,7 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPip
 // ── Modules ───────────────────────────────────────────────────────────────────
 builder.Services.AddCatalogModule(builder.Configuration);
 builder.Services.AddMediaModule(builder.Configuration);
-builder.Services.AddIdentityInfrastructure(builder.Configuration);
+builder.Services.AddIdentityModule(builder.Configuration);
 
 // ── MassTransit / RabbitMQ ────────────────────────────────────────────────────
 var rabbit = builder.Configuration.GetSection("RabbitMq");
@@ -93,6 +93,7 @@ var app = builder.Build();
 // ── Database migrations ───────────────────────────────────────────────────────
 await app.Services.MigrateCatalogAsync();
 await app.Services.MigrateMediaAsync();
+await app.Services.MigrateIdentityAsync();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.UseMiddleware<ExceptionMiddleware>();

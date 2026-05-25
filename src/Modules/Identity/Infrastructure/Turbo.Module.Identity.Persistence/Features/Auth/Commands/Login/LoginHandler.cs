@@ -1,0 +1,59 @@
+using Microsoft.EntityFrameworkCore;
+using Turbo.Module.Identity.Application.Common.Interfaces;
+using Turbo.Module.Identity.Persistence.Contexts;
+using Turbo.Shared.Application.Abstraction;
+using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
+using RefreshTokenEntity = Turbo.Module.Identity.Domain.Entity.RefreshToken;
+
+namespace Turbo.Module.Identity.Persistence.Features.Auth.Commands.Login;
+
+public sealed class LoginHandler(
+    IIdentityWriteDbContext writeDb,
+    IIdentityReadDbContext readDb,
+    IPasswordHasher passwordHasher,
+    IJwtService jwtService
+) : ICommandHandler<LoginRequest, AppConc.Response<LoginResponse>>
+{
+    private const int MaxFailedAttempts = 5;
+    private const int BlockDurationSeconds = 900; // 15 dəqiqə
+
+    public async Task<AppConc.Response<LoginResponse>> HandleAsync(
+        LoginRequest command, CancellationToken ct = default)
+    {
+        var normalizedEmail = command.Email.ToUpperInvariant();
+
+        var user = await readDb.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail, ct);
+
+        if (user is null || !user.IsActive)
+            return AppConc.Response<LoginResponse>.Unauthorized("Email or password is incorrect.");
+
+        if (user.IsCurrentlyBlocked())
+            return AppConc.Response<LoginResponse>.Forbidden("User is blocked. Please contact support.");
+
+        if (!passwordHasher.Verify(command.Password, user.PasswordHash))
+        {
+            writeDb.Attach(user);
+            user.RecordFailedLogin();
+            if (user.FailedLoginCount >= MaxFailedAttempts)
+                user.Block(BlockDurationSeconds);
+            await writeDb.SaveChangesAsync(ct);
+
+            return AppConc.Response<LoginResponse>.Unauthorized("Email or password is incorrect.");
+        }
+
+        writeDb.Attach(user);
+        user.ResetFailedLogin();
+
+        var accessToken = jwtService.GenerateAccessToken(user);
+        var refreshTokenValue = jwtService.GenerateRefreshToken();
+        var refreshToken = new RefreshTokenEntity(user.Id, refreshTokenValue);
+
+        writeDb.Add(refreshToken);
+        await writeDb.SaveChangesAsync(ct);
+
+        return AppConc.Response<LoginResponse>.Success(
+            new LoginResponse(accessToken, refreshTokenValue, user.Id));
+    }
+}

@@ -1,25 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Turbo.Module.Identity.Domain.Exceptions;
-using Turbo.Module.Identity.Persistence.Context;
+using Turbo.Module.Identity.Persistence.Contexts;
+using Turbo.Shared.Application.Abstraction;
+using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
 namespace Turbo.Module.Identity.Persistence.Features.Auth.Commands.UnblockUser;
 
 public sealed class UnblockUserHandler(
-    IdentityCommandContext commandDb
-) : IRequestHandler<UnblockUserCommand>
+    IIdentityWriteDbContext writeDb,
+    IIdentityReadDbContext readDb
+) : ICommandHandler<UnblockUserRequest, AppConc.Response>
 {
-    public async Task Handle(UnblockUserCommand request, CancellationToken cancellationToken)
+    public async Task<AppConc.Response> HandleAsync(
+        UnblockUserRequest command, CancellationToken ct = default)
     {
-        var user = await commandDb.Users
-            .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken)
-            ?? throw new UserNotFoundException(request.UserId);
+        var user = await readDb.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == command.UserId, ct);
 
+        if (user is null)
+            return AppConc.Response.NotFound($"User '{command.UserId}' not found.");
+
+        writeDb.Attach(user);
         user.Unblock();
+        await writeDb.SaveChangesAsync(ct);
 
-        await commandDb.SaveChangesAsync(cancellationToken);
+        return AppConc.Response.Success("User unblocked successfully.");
     }
 }
