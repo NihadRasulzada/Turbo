@@ -4,8 +4,11 @@
 # API yerli (lokal) işləyir → servislərə localhost üzərindən qoşulur
 #
 # Network topologiyası:
-#   command-db-net → command-db, replication-setup
+#   command-db-net → command-db, query-db (WAL receiver), replication-setup
 #   query-db-net   → query-db,   replication-setup
+#
+# query-db command-db-net-dədir: WAL receiver prosesi command-db-yə
+# birbaşa TCP qoşulması açmalıdır; ayrı networkda olsa replication işləmir.
 #   cache-net      → redis
 #   messaging-net  → rabbitmq
 #   storage-net    → minio
@@ -69,6 +72,7 @@ services:
       retries: 10
     networks:
       - query-db-net
+      - command-db-net  # WAL receiver → command-db birbaşa TCP üçün
 
   # ── Replication Setup (one-shot) ────────────────────
   # Hər iki DB-yə çatmalıdır → hər iki networkda olur

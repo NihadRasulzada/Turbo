@@ -1,39 +1,35 @@
 #!/bin/bash
 # =====================================================
 # Turbo - Logical Replication Wiring Script
-# Runs AFTER both command-db and query-db are healthy
-# Called by the replication-setup service in compose
+# Runs AFTER both command-db and query-db are healthy.
+# Called by the replication-setup service in compose.
+#
+# Bu script YALNIZ command-db-də publication yaradır.
+# Subscription app startup-da (Program.cs) migration-
+# lardan SONRA yaradılır — timing problemini aradan qaldırır.
 # =====================================================
 
 set -e
 
 COMMAND_HOST="${COMMAND_DB_HOST:-command-db}"
-QUERY_HOST="${QUERY_DB_HOST:-query-db}"
 COMMAND_PORT="${COMMAND_DB_PORT:-5432}"
-QUERY_PORT="${QUERY_DB_PORT:-5432}"
 DB_USER="${POSTGRES_USER:-turbo}"
 DB_PASS="${POSTGRES_PASSWORD:-turbo_password}"
 COMMAND_DB="${COMMAND_DB_NAME:-turbo_command}"
-QUERY_DB="${QUERY_DB_NAME:-turbo_query}"
-REPLICATOR_PASS="${REPLICATOR_PASSWORD:-replicator_password}"
 
 export PGPASSWORD="$DB_PASS"
 
 echo "⏳ Waiting for command-db..."
 until pg_isready -h "$COMMAND_HOST" -p "$COMMAND_PORT" -U "$DB_USER"; do
-        sleep 2
+    sleep 2
 done
 
-echo "⏳ Waiting for query-db..."
-until pg_isready -h "$QUERY_HOST" -p "$QUERY_PORT" -U "$DB_USER"; do
-        sleep 2
-done
-
-echo "✅ Both databases are ready."
+echo "✅ command-db is ready."
 
 # ── Create Publication on Command DB ──────────────────
 echo "📢 Creating publication on command-db..."
-psql -h "$COMMAND_HOST" -p "$COMMAND_PORT" -U "$DB_USER" -d "$COMMAND_DB" <<SQL
+psql -h "$COMMAND_HOST" -p "$COMMAND_PORT" -U "$DB_USER" -d "$COMMAND_DB" \
+     -v ON_ERROR_STOP=1 <<SQL
 DO \$\$
 BEGIN
   IF NOT EXISTS (
@@ -48,25 +44,8 @@ END
 \$\$;
 SQL
 
-# ── Create Subscription on Query DB ───────────────────
-echo "🔗 Creating subscription on query-db..."
-psql -h "$QUERY_HOST" -p "$QUERY_PORT" -U "$DB_USER" -d "$QUERY_DB" <<SQL
-DO \$\$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_subscription WHERE subname = 'turbo_subscription'
-  ) THEN
-    CREATE SUBSCRIPTION turbo_subscription
-      CONNECTION 'host=${COMMAND_HOST} port=${COMMAND_PORT} dbname=${COMMAND_DB} user=replicator password=${REPLICATOR_PASS}'
-      PUBLICATION turbo_publication;
-    RAISE NOTICE 'Subscription created.';
-  ELSE
-    RAISE NOTICE 'Subscription already exists, skipping.';
-  END IF;
-END
-\$\$;
-SQL
-
-echo "✅ Logical replication wired successfully."
-echo "   Publisher : $COMMAND_HOST/$COMMAND_DB"
-echo "   Subscriber: $QUERY_HOST/$QUERY_DB"
+echo "✅ Publication hazırdır."
+echo "   Publisher: $COMMAND_HOST/$COMMAND_DB"
+echo ""
+echo "ℹ️  Subscription app startup-da (Program.cs → SetupReplicationAsync)"
+echo "   migration-lardan SONRA yaradılacaq."
