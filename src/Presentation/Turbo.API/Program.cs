@@ -16,6 +16,11 @@ using Turbo.Shared.Infrastructure.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// BackgroundService xətası bütün host-u çökürməsin;
+// worker critical log yazır və dayanır, API işləməyə davam edir.
+builder.Services.Configure<HostOptions>(opts =>
+    opts.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore);
+
 builder.Services.AddControllers();
 
 // ── OpenAPI / Scalar ──────────────────────────────────────────────────────────

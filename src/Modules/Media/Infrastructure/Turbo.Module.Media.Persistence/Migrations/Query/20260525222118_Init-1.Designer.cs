@@ -9,10 +9,10 @@ using Turbo.Module.Media.Persistence.Contexts;
 
 #nullable disable
 
-namespace Turbo.Module.Media.Persistence.Migrations.Command
+namespace Turbo.Module.Media.Persistence.Migrations.Query
 {
-    [DbContext(typeof(CommandDbContext))]
-    [Migration("20260525113816_Init-1")]
+    [DbContext(typeof(QueryDbContext))]
+    [Migration("20260525222118_Init-1")]
     partial class Init1
     {
         /// <inheritdoc />

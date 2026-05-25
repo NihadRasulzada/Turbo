@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Turbo.Module.Catalog.Persistence.Migrations.Query
+namespace Turbo.Module.Catalog.Persistence.Migrations.Command
 {
     /// <inheritdoc />
     public partial class Init1 : Migration

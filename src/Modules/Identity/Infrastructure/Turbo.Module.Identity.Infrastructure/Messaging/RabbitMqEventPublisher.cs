@@ -52,6 +52,7 @@ public sealed class RabbitMqEventPublisher(
             {
                 HostName = _opts.Host,
                 Port = _opts.Port,
+                VirtualHost = _opts.VirtualHost,
                 UserName = _opts.Username,
                 Password = _opts.Password
             };

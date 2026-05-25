@@ -12,7 +12,7 @@ using Turbo.Module.Catalog.Persistence.Contexts;
 namespace Turbo.Module.Catalog.Persistence.Migrations.Command
 {
     [DbContext(typeof(CommandDbContext))]
-    [Migration("20260525113857_Init-1")]
+    [Migration("20260525222011_Init-1")]
     partial class Init1
     {
         /// <inheritdoc />

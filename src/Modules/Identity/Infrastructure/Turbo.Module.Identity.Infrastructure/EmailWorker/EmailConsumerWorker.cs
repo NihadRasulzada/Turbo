@@ -35,6 +35,7 @@ public sealed class EmailConsumerWorker(
         {
             HostName = _rabbit.Host,
             Port = _rabbit.Port,
+            VirtualHost = _rabbit.VirtualHost,
             UserName = _rabbit.Username,
             Password = _rabbit.Password
         };
