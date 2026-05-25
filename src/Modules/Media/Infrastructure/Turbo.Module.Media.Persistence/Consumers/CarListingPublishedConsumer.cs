@@ -7,7 +7,9 @@ using MediaEntity = Turbo.Module.Media.Domain.Entity.Media;
 
 namespace Turbo.Module.Media.Persistence.Consumers;
 
-public sealed class CarListingPublishedConsumer(IMediaWriteDbContext db)
+public sealed class CarListingPublishedConsumer(
+    IMediaWriteDbContext writeDb,
+    IMediaReadDbContext readDb)
     : IConsumer<CarListingPublishedIntegrationEvent>
 {
     public async Task Consume(ConsumeContext<CarListingPublishedIntegrationEvent> context)
@@ -15,17 +17,20 @@ public sealed class CarListingPublishedConsumer(IMediaWriteDbContext db)
         var message = context.Message;
         var ct = context.CancellationToken;
 
-        // Load via write context so the change tracker picks up mutations.
-        var draftMediaItems = await db.Set<MediaEntity>()
+        // Load untracked from read DB; attach to write DB so mutations are persisted.
+        var draftMediaItems = await readDb.Medias
+            .AsNoTracking()
             .Where(m => m.OwnerId == message.DraftId && m.OwnerType == MediaOwnerType.CarDraft)
             .ToListAsync(ct);
 
         if (draftMediaItems.Count == 0)
             return;
 
+        writeDb.AttachRange(draftMediaItems);
+
         foreach (var media in draftMediaItems)
             media.TransferOwnership(message.CarId, MediaOwnerType.Car);
 
-        await db.SaveChangesAsync(ct);
+        await writeDb.SaveChangesAsync(ct);
     }
 }

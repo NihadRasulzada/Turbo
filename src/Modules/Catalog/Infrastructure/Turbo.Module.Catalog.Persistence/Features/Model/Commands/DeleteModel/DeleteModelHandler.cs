@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Turbo.Module.Catalog.Persistence.Contexts;
-using DomainModel = Turbo.Module.Catalog.Domain.Entity.Model;
 
 using Turbo.Shared.Application.Abstraction;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
+using DomainModel = Turbo.Module.Catalog.Domain.Entity.Model;
 
 namespace Turbo.Module.Catalog.Persistence.Features.Model.Commands.DeleteModel;
 
@@ -15,7 +15,8 @@ public sealed class DeleteModelHandler(
     public async Task<AppConc.Response> HandleAsync(
         DeleteModelRequest command, CancellationToken ct = default)
     {
-        var model = await writeDb.Set<DomainModel>()
+        var model = await readDb.Models
+            .AsNoTracking()
             .FirstOrDefaultAsync(m => m.Id == command.Id, ct);
         if (model is null)
             return AppConc.Response.NotFound("Model not found.");

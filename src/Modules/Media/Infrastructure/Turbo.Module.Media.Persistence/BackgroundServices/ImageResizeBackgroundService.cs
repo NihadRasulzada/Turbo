@@ -45,12 +45,14 @@ public sealed class ImageResizeBackgroundService(
     private async Task ProcessBatchAsync(CancellationToken ct)
     {
         using var scope = scopeFactory.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<IMediaWriteDbContext>();
-        var minioService = scope.ServiceProvider.GetRequiredService<IMinioService>();
+        var writeDb = scope.ServiceProvider.GetRequiredService<IMediaWriteDbContext>();
+        var readDb  = scope.ServiceProvider.GetRequiredService<IMediaReadDbContext>();
+        var minioService  = scope.ServiceProvider.GetRequiredService<IMinioService>();
         var resizeService = scope.ServiceProvider.GetRequiredService<IImageResizeService>();
 
-        // Load via write context so mutations are tracked before SaveChangesAsync.
-        var pending = await db.Set<MediaEntity>()
+        // Load untracked from read DB; attach to write DB before mutating.
+        var pending = await readDb.Medias
+            .AsNoTracking()
             .Where(m => !m.IsResized)
             .Take(_settings.BatchSize)
             .ToListAsync(ct);
@@ -59,6 +61,8 @@ public sealed class ImageResizeBackgroundService(
             return;
 
         logger.LogInformation("Resizing {Count} pending media item(s)", pending.Count);
+
+        writeDb.AttachRange(pending);
 
         foreach (var media in pending)
         {
@@ -95,6 +99,6 @@ public sealed class ImageResizeBackgroundService(
             }
         }
 
-        await db.SaveChangesAsync(ct);
+        await writeDb.SaveChangesAsync(ct);
     }
 }

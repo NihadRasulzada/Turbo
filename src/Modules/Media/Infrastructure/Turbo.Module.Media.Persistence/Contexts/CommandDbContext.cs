@@ -7,8 +7,11 @@ public sealed class CommandDbContext(DbContextOptions<CommandDbContext> options)
     : MediaDbContext(options), IMediaWriteDbContext
 {
     // ── IWriteDbContext explicit implementations ─────────────────────────
-    IQueryable<TEntity> IWriteDbContext.Set<TEntity>()
-        => Set<TEntity>();
+    void IWriteDbContext.Attach<TEntity>(TEntity entity)
+        => Attach(entity);
+
+    void IWriteDbContext.AttachRange<TEntity>(IEnumerable<TEntity> entities)
+        => AttachRange(entities);
 
     void IWriteDbContext.Add<TEntity>(TEntity entity)
         => Add(entity);

@@ -17,7 +17,8 @@ public sealed class SubmitDraftDetailsHandler(
         SubmitDraftDetailsRequest command,
         CancellationToken ct = default)
     {
-        var draft = await writeDb.Set<CarDraft>()
+        var draft = await readDb.CarDrafts
+            .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == command.DraftId, ct);
         if (draft is null)
             return AppConc.Response<SubmitDraftDetailsResponse>.NotFound("Draft not found.");
@@ -39,6 +40,7 @@ public sealed class SubmitDraftDetailsHandler(
             return AppConc.Response<SubmitDraftDetailsResponse>.NotFound(
                 "Model not found or does not belong to the specified brand.");
 
+        writeDb.Attach(draft);
         draft.SetDetails(
             command.BrandId, command.ModelId, command.Year,
             command.FuelType, command.TransmissionType, command.Mileage);

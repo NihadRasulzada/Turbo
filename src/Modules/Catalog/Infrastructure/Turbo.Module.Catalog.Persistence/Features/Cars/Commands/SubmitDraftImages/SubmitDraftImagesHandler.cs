@@ -12,6 +12,7 @@ namespace Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftIma
 
 public sealed class SubmitDraftImagesHandler(
     ICatalogWriteDbContext writeDb,
+    ICatalogReadDbContext readDb,
     IPublishEndpoint publishEndpoint)
     : ICommandHandler<SubmitDraftImagesRequest, AppConc.Response<SubmitDraftImagesResponse>>
 {
@@ -22,7 +23,8 @@ public sealed class SubmitDraftImagesHandler(
         if (command.Images.Count == 0)
             return AppConc.Response<SubmitDraftImagesResponse>.BadRequest("At least one image is required.");
 
-        var draft = await writeDb.Set<CarDraft>()
+        var draft = await readDb.CarDrafts
+            .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == command.DraftId, ct);
         if (draft is null)
             return AppConc.Response<SubmitDraftImagesResponse>.NotFound("Draft not found.");
@@ -31,6 +33,7 @@ public sealed class SubmitDraftImagesHandler(
         if (draft.CurrentStep != 1)
             return AppConc.Response<SubmitDraftImagesResponse>.BadRequest("Images step has already been submitted.");
 
+        writeDb.Attach(draft);
         draft.AdvanceStep();
         await writeDb.SaveChangesAsync(ct);
 

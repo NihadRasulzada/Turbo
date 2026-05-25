@@ -12,6 +12,7 @@ namespace Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftPri
 
 public sealed class SubmitDraftPricingHandler(
     ICatalogWriteDbContext writeDb,
+    ICatalogReadDbContext readDb,
     IPublishEndpoint publishEndpoint)
     : ICommandHandler<SubmitDraftPricingRequest, AppConc.Response<SubmitDraftPricingResponse>>
 {
@@ -19,7 +20,8 @@ public sealed class SubmitDraftPricingHandler(
         SubmitDraftPricingRequest command,
         CancellationToken ct = default)
     {
-        var draft = await writeDb.Set<CarDraft>()
+        var draft = await readDb.CarDrafts
+            .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == command.DraftId, ct);
         if (draft is null)
             return AppConc.Response<SubmitDraftPricingResponse>.NotFound("Draft not found.");
@@ -32,8 +34,6 @@ public sealed class SubmitDraftPricingHandler(
             return AppConc.Response<SubmitDraftPricingResponse>.BadRequest(
                 "Car details are incomplete. Resubmit the details step.");
 
-        draft.SetPricing(command.Price, command.Description);
-
         var car = new Car(
             draft.BrandId.Value,
             draft.ModelId.Value,
@@ -44,8 +44,10 @@ public sealed class SubmitDraftPricingHandler(
             command.Price,
             command.Description);
 
-        writeDb.Add(car);
+        writeDb.Attach(draft);
+        draft.SetPricing(command.Price, command.Description);
         draft.Complete();
+        writeDb.Add(car);
         await writeDb.SaveChangesAsync(ct);
 
         await publishEndpoint.Publish(
