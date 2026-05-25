@@ -6,7 +6,7 @@ using Turbo.Shared.Application.Abstraction;
 using Turbo.Shared.Contracts.IntegrationEvents;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
-namespace Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftPricing;
+namespace Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftPricing;
 
 public sealed class SubmitDraftPricingHandler(
     CommandDbContext db,

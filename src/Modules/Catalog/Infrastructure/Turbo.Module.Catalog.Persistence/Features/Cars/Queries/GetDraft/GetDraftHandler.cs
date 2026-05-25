@@ -3,7 +3,7 @@ using Turbo.Module.Catalog.Persistence.Contexts;
 using Turbo.Shared.Application.Abstraction;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
-namespace Turbo.Module.Catalog.Persistence.Features.Onboarding.Queries.GetDraft;
+namespace Turbo.Module.Catalog.Persistence.Features.Cars.Queries.GetDraft;
 
 public sealed class GetDraftHandler(QueryDbContext db)
     : IQueryHandler<GetDraftRequest, AppConc.Response<GetDraftResponse>>

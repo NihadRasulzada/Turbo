@@ -3,7 +3,7 @@ using Turbo.Module.Catalog.Persistence.Contexts;
 using Turbo.Shared.Application.Abstraction;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
-namespace Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.CreateDraft;
+namespace Turbo.Module.Catalog.Persistence.Features.Cars.Commands.CreateDraft;
 
 public sealed class CreateDraftHandler(CommandDbContext db)
     : ICommandHandler<CreateDraftRequest, AppConc.Response<CreateDraftResponse>>

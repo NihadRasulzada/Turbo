@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Turbo.API.Controllers.Requests;
 using Turbo.API.Extensions;
-using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.CreateDraft;
-using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftDetails;
-using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftImages;
-using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftPricing;
-using Turbo.Module.Catalog.Persistence.Features.Onboarding.Queries.GetDraft;
-using Turbo.Module.Catalog.Persistence.Features.Onboarding.Queries.GetOnboardingConfig;
+using Turbo.Module.Catalog.Persistence.Features.Cars.Commands.CreateDraft;
+using Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftDetails;
+using Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftImages;
+using Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftPricing;
+using Turbo.Module.Catalog.Persistence.Features.Cars.Queries.GetDraft;
+using Turbo.Module.Catalog.Persistence.Features.Cars.Queries.GetCarConfig;
 using Turbo.Shared.Application.Abstraction;
 using Turbo.Shared.Web.Controllers;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
@@ -17,9 +17,9 @@ namespace Turbo.API.Controllers;
 /// Backend-driven multi-step car listing onboarding.
 /// </summary>
 [ApiController]
-[Route("api/onboarding")]
+[Route("api/cars")]
 [Produces("application/json")]
-public sealed class OnboardingController(
+public sealed class CarsController(
     ICommandDispatcher commandDispatcher,
     IQueryDispatcher queryDispatcher) : ControllerBase
 {
@@ -27,12 +27,12 @@ public sealed class OnboardingController(
     /// Returns the step definitions for the onboarding flow.
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(SuccessResponse<GetOnboardingConfigResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SuccessResponse<GetCarConfigResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetConfig(CancellationToken ct)
     {
         var result = await queryDispatcher
-            .DispatchAsync<GetOnboardingConfigRequest, AppConc.Response<GetOnboardingConfigResponse>>(
-                new GetOnboardingConfigRequest(), ct);
+            .DispatchAsync<GetCarConfigRequest, AppConc.Response<GetCarConfigResponse>>(
+                new GetCarConfigRequest(), ct);
         return this.HandleServiceResponse(result);
     }
 

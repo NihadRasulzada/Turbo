@@ -1,15 +1,15 @@
-namespace Turbo.Module.Catalog.Persistence.Features.Onboarding.Queries.GetOnboardingConfig;
+namespace Turbo.Module.Catalog.Persistence.Features.Cars.Queries.GetCarConfig;
 
-public sealed record GetOnboardingConfigResponse(IReadOnlyList<OnboardingStep> Steps);
+public sealed record GetCarConfigResponse(IReadOnlyList<CarStep> Steps);
 
-public sealed record OnboardingStep(
+public sealed record CarStep(
     int StepNumber,
     string Key,
     string Title,
-    IReadOnlyList<OnboardingField> Fields
+    IReadOnlyList<CarField> Fields
 );
 
-public sealed record OnboardingField(
+public sealed record CarField(
     string Name,
     string Label,
     string Type,

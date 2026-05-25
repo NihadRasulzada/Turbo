@@ -2,13 +2,13 @@ using Turbo.Module.Catalog.Domain.Enum;
 using Turbo.Shared.Application.Abstraction;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
-namespace Turbo.Module.Catalog.Persistence.Features.Onboarding.Queries.GetOnboardingConfig;
+namespace Turbo.Module.Catalog.Persistence.Features.Cars.Queries.GetCarConfig;
 
-public sealed class GetOnboardingConfigHandler
-    : IQueryHandler<GetOnboardingConfigRequest, AppConc.Response<GetOnboardingConfigResponse>>
+public sealed class GetCarConfigHandler
+    : IQueryHandler<GetCarConfigRequest, AppConc.Response<GetCarConfigResponse>>
 {
-    public Task<AppConc.Response<GetOnboardingConfigResponse>> HandleAsync(
-        GetOnboardingConfigRequest query,
+    public Task<AppConc.Response<GetCarConfigResponse>> HandleAsync(
+        GetCarConfigRequest query,
         CancellationToken ct = default)
     {
         var fuelTypes = Enum.GetValues<FuelType>()
@@ -19,7 +19,7 @@ public sealed class GetOnboardingConfigHandler
             .Select(t => new SelectOption((int)t, t.ToString()))
             .ToList();
 
-        var steps = new List<OnboardingStep>
+        var steps = new List<CarStep>
         {
             new(1, "images", "Şəkillər əlavə edin",
             [
@@ -47,7 +47,7 @@ public sealed class GetOnboardingConfigHandler
         };
 
         return Task.FromResult(
-            AppConc.Response<GetOnboardingConfigResponse>.Success(
-                new GetOnboardingConfigResponse(steps)));
+            AppConc.Response<GetCarConfigResponse>.Success(
+                new GetCarConfigResponse(steps)));
     }
 }

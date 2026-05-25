@@ -14,12 +14,12 @@ using Turbo.Module.Catalog.Persistence.Features.Model.Commands.DeleteModel;
 using Turbo.Module.Catalog.Persistence.Features.Model.Commands.UpdateModel;
 using Turbo.Module.Catalog.Persistence.Features.Model.Queries.GetAllModels;
 using Turbo.Module.Catalog.Persistence.Features.Model.Queries.GetModelById;
-using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.CreateDraft;
-using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftDetails;
-using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftImages;
-using Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftPricing;
-using Turbo.Module.Catalog.Persistence.Features.Onboarding.Queries.GetDraft;
-using Turbo.Module.Catalog.Persistence.Features.Onboarding.Queries.GetOnboardingConfig;
+using Turbo.Module.Catalog.Persistence.Features.Cars.Commands.CreateDraft;
+using Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftDetails;
+using Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftImages;
+using Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftPricing;
+using Turbo.Module.Catalog.Persistence.Features.Cars.Queries.GetDraft;
+using Turbo.Module.Catalog.Persistence.Features.Cars.Queries.GetCarConfig;
 using Turbo.Module.Media.DependencyInjection.Extensions;
 using Turbo.Shared.Application.Abstraction;
 using Turbo.Shared.Application.Pipeline;
@@ -112,7 +112,7 @@ builder.Services.AddScoped<
     ICommandHandler<DeleteModelRequest, AppConc.Response>,
     DeleteModelHandler>();
 
-// ── Onboarding commands ───────────────────────────────────────────────────────
+// ── Cars commands ─────────────────────────────────────────────────────────────
 builder.Services.AddScoped<
     ICommandHandler<CreateDraftRequest, AppConc.Response<CreateDraftResponse>>,
     CreateDraftHandler>();
@@ -131,10 +131,10 @@ builder.Services.AddScoped<
     SubmitDraftPricingHandler>();
 builder.Services.AddScoped<IValidator<SubmitDraftPricingRequest>, SubmitDraftPricingValidator>();
 
-// ── Onboarding queries ────────────────────────────────────────────────────────
+// ── Cars queries ──────────────────────────────────────────────────────────────
 builder.Services.AddScoped<
-    IQueryHandler<GetOnboardingConfigRequest, AppConc.Response<GetOnboardingConfigResponse>>,
-    GetOnboardingConfigHandler>();
+    IQueryHandler<GetCarConfigRequest, AppConc.Response<GetCarConfigResponse>>,
+    GetCarConfigHandler>();
 
 builder.Services.AddScoped<
     IQueryHandler<GetDraftRequest, AppConc.Response<GetDraftResponse>>,

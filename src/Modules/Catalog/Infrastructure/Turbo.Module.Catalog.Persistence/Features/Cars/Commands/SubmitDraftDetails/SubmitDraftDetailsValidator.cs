@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftDetails;
+namespace Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftDetails;
 
 public sealed class SubmitDraftDetailsValidator : AbstractValidator<SubmitDraftDetailsRequest>
 {

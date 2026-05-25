@@ -1,4 +1,4 @@
-namespace Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftImages;
+namespace Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftImages;
 
 /// <summary>Returned after images are uploaded; guides the client to the details step.</summary>
 public sealed record SubmitDraftImagesResponse(

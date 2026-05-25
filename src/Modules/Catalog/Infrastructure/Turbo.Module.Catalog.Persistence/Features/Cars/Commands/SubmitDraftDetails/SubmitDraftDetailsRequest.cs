@@ -2,7 +2,7 @@ using Turbo.Module.Catalog.Domain.Enum;
 using Turbo.Shared.Application.Abstraction;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
-namespace Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftDetails;
+namespace Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftDetails;
 
 public sealed record SubmitDraftDetailsRequest(
     Guid DraftId,

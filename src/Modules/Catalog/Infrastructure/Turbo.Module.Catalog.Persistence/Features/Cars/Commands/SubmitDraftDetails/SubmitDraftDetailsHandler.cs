@@ -4,7 +4,7 @@ using Turbo.Module.Catalog.Persistence.Contexts;
 using Turbo.Shared.Application.Abstraction;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
-namespace Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftDetails;
+namespace Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftDetails;
 
 public sealed class SubmitDraftDetailsHandler(CommandDbContext db)
     : ICommandHandler<SubmitDraftDetailsRequest, AppConc.Response<SubmitDraftDetailsResponse>>

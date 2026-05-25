@@ -1,4 +1,4 @@
-namespace Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftDetails;
+namespace Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftDetails;
 
 /// <summary>Returned after details are saved; guides the client to the pricing step.</summary>
 public sealed record SubmitDraftDetailsResponse(

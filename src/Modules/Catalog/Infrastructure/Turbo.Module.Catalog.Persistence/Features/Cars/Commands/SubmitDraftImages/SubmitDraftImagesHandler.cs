@@ -5,7 +5,7 @@ using Turbo.Shared.Application.Abstraction;
 using Turbo.Shared.Contracts.IntegrationEvents;
 using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
-namespace Turbo.Module.Catalog.Persistence.Features.Onboarding.Commands.SubmitDraftImages;
+namespace Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftImages;
 
 public sealed class SubmitDraftImagesHandler(
     CommandDbContext db,
