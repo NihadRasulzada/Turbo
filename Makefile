@@ -49,21 +49,87 @@ format-check:
 	dotnet format $(SLN) --verify-no-changes
 
 # ── EF Core ───────────────────────────────────────────────────
-MODULE ?= Identity
+MODULE ?= Catalog
+# MODULE-u həmişə böyük hərfə çeviririk (Catalog → CATALOG, media → MEDIA)
+MODULE_UPPER := $(shell echo $(MODULE) | tr '[:lower:]' '[:upper:]')
+
+# Persistence layihə yolları
 MIGRATIONS_PROJECT_IDENTITY := src/Modules/Identity/Infrastructure/Turbo.Module.Identity.Persistence/Turbo.Module.Identity.Persistence.csproj
-MIGRATIONS_PROJECT_CAR      := src/Modules/Car/Infrastructure/Turbo.Module.Car.Persistence/Turbo.Module.Car.Persistence.csproj
+MIGRATIONS_PROJECT_CATALOG  := src/Modules/Catalog/Infrastructure/Turbo.Module.Catalog.Persistence/Turbo.Module.Catalog.Persistence.csproj
+MIGRATIONS_PROJECT_MEDIA    := src/Modules/Media/Infrastructure/Turbo.Module.Media.Persistence/Turbo.Module.Media.Persistence.csproj
+
+# Fully qualified context adları (eyni adlı context-lərin qarışmaması üçün)
+COMMAND_CONTEXT_IDENTITY := Turbo.Module.Identity.Persistence.Contexts.CommandDbContext
+QUERY_CONTEXT_IDENTITY   := Turbo.Module.Identity.Persistence.Contexts.QueryDbContext
+COMMAND_CONTEXT_CATALOG  := Turbo.Module.Catalog.Persistence.Contexts.CommandDbContext
+QUERY_CONTEXT_CATALOG    := Turbo.Module.Catalog.Persistence.Contexts.QueryDbContext
+COMMAND_CONTEXT_MEDIA    := Turbo.Module.Media.Persistence.Contexts.CommandDbContext
+QUERY_CONTEXT_MEDIA      := Turbo.Module.Media.Persistence.Contexts.QueryDbContext
+
+MIGRATIONS_PROJECT := $(MIGRATIONS_PROJECT_$(MODULE_UPPER))
+COMMAND_CONTEXT    := $(COMMAND_CONTEXT_$(MODULE_UPPER))
+QUERY_CONTEXT      := $(QUERY_CONTEXT_$(MODULE_UPPER))
+
+# Daxili yardımçılar — MODULE və NAME yoxlanması
+define check-module
+	@if [ -z "$(MIGRATIONS_PROJECT)" ]; then \
+		echo "❌ MODULE='$(MODULE)' tanınmır. İstifadə et: Catalog, Media, Identity"; exit 1; \
+	fi
+endef
+
+define check-name
+	@if [ -z "$(NAME)" ]; then \
+		echo "❌ NAME parametri lazımdır. Nümunə: make mig-add NAME=Init MODULE=Catalog"; exit 1; \
+	fi
+endef
 
 .PHONY: mig-add
 mig-add:
-	dotnet ef migrations add $(NAME) --project $(MIGRATIONS_PROJECT_$(MODULE)) --startup-project $(API)
+	$(call check-module)
+	$(call check-name)
+	@echo "📦 [$(MODULE)] CommandDbContext üçün migration yaradılır: $(NAME)"
+	dotnet ef migrations add $(NAME) \
+		--project $(MIGRATIONS_PROJECT) \
+		--startup-project $(API) \
+		--context $(COMMAND_CONTEXT) \
+		--output-dir Migrations/Command
+	@echo "📦 [$(MODULE)] QueryDbContext üçün migration yaradılır: $(NAME)"
+	dotnet ef migrations add $(NAME) \
+		--project $(MIGRATIONS_PROJECT) \
+		--startup-project $(API) \
+		--context $(QUERY_CONTEXT) \
+		--output-dir Migrations/Query
+	@echo "✅ Migration faylları yaradıldı."
 
 .PHONY: mig-apply
 mig-apply:
-	dotnet ef database update --project $(MIGRATIONS_PROJECT_$(MODULE)) --startup-project $(API)
+	$(call check-module)
+	@echo "🚀 [$(MODULE)] CommandDbContext (write DB) tətbiq edilir..."
+	dotnet ef database update \
+		--project $(MIGRATIONS_PROJECT) \
+		--startup-project $(API) \
+		--context $(COMMAND_CONTEXT)
+	@echo "🚀 [$(MODULE)] QueryDbContext (read DB) tətbiq edilir..."
+	dotnet ef database update \
+		--project $(MIGRATIONS_PROJECT) \
+		--startup-project $(API) \
+		--context $(QUERY_CONTEXT)
+	@echo "✅ Hər iki DB yeniləndi."
 
 .PHONY: mig-remove
 mig-remove:
-	dotnet ef migrations remove --project $(MIGRATIONS_PROJECT_$(MODULE)) --startup-project $(API)
+	$(call check-module)
+	@echo "🗑️  [$(MODULE)] CommandDbContext son migration silinir..."
+	dotnet ef migrations remove \
+		--project $(MIGRATIONS_PROJECT) \
+		--startup-project $(API) \
+		--context $(COMMAND_CONTEXT)
+	@echo "🗑️  [$(MODULE)] QueryDbContext son migration silinir..."
+	dotnet ef migrations remove \
+		--project $(MIGRATIONS_PROJECT) \
+		--startup-project $(API) \
+		--context $(QUERY_CONTEXT)
+	@echo "✅ Son migrationlar silindi."
 
 # ── List projects ─────────────────────────────────────────────
 .PHONY: list
@@ -164,9 +230,9 @@ help:
 	@echo "  clean            bin/obj qovluqlarını sil"
 	@echo "  format           Kodu formatla"
 	@echo "  format-check     Format yoxlaması (CI üçün)"
-	@echo "  mig-add          Migration əlavə et   → make mig-add NAME=Init MODULE=Identity"
-	@echo "  mig-apply        Migration tətbiq et  → make mig-apply MODULE=Car"
-	@echo "  mig-remove       Son migration-ı sil  → make mig-remove MODULE=Identity"
+	@echo "  mig-add          Migration yarat   → make mig-add NAME=Init MODULE=Catalog"
+	@echo "  mig-apply        Hər 2 DB-yə tətbiq et → make mig-apply MODULE=Catalog"
+	@echo "  mig-remove       Son migration-ı sil  → make mig-remove MODULE=Catalog"
 	@echo "  list             Solution-dakı layihələri göstər"
 	@echo ""
 	@echo "  ── Docker (Development) ──────────────────────────────────"

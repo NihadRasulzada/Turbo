@@ -1,0 +1,119 @@
+using MassTransit;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Minio;
+using Turbo.Module.Media.Application.Interfaces;
+using Turbo.Module.Media.Application.Settings;
+using Turbo.Module.Media.Infrastructure.Services;
+using Turbo.Module.Media.Infrastructure.Settings;
+using Turbo.Module.Media.Persistence.BackgroundServices;
+using Turbo.Module.Media.Persistence.Consumers;
+using Turbo.Module.Media.Persistence.Contexts;
+
+namespace Turbo.Module.Media.DependencyInjection.Extensions;
+
+public static class MediaModuleExtensions
+{
+    public static IServiceCollection AddMediaModule(
+        this IServiceCollection services,
+        IConfiguration configuration
+    )
+    {
+        // ── Options ──────────────────────────────────────────────────────────
+        services.Configure<MinioSettings>(opts =>
+        {
+            opts.Endpoint = configuration["MinIO:Endpoint"] ?? string.Empty;
+            opts.AccessKey = configuration["MinIO:AccessKey"] ?? string.Empty;
+            opts.SecretKey = configuration["MinIO:SecretKey"] ?? string.Empty;
+            opts.BucketName = configuration["MinIO:BucketName"] ?? string.Empty;
+            opts.UseSSL = string.Equals(
+                configuration["MinIO:UseSSL"],
+                "true",
+                StringComparison.OrdinalIgnoreCase
+            );
+        });
+
+        services.Configure<ImageResizeSettings>(opts =>
+        {
+            if (int.TryParse(configuration["ImageResize:MaxWidth"], out var w)) opts.MaxWidth = w;
+            if (int.TryParse(configuration["ImageResize:MaxHeight"], out var h)) opts.MaxHeight = h;
+            if (int.TryParse(configuration["ImageResize:BatchSize"], out var b)) opts.BatchSize = b;
+            if (int.TryParse(configuration["ImageResize:PollingIntervalSeconds"], out var p))
+                opts.PollingIntervalSeconds = p;
+        });
+
+        // ── MinIO ─────────────────────────────────────────────────────────────
+        services.AddSingleton<IMinioClient>(sp =>
+        {
+            var settings = sp.GetRequiredService<IOptions<MinioSettings>>().Value;
+            return new MinioClient()
+                .WithEndpoint(settings.Endpoint)
+                .WithCredentials(settings.AccessKey, settings.SecretKey)
+                .WithSSL(settings.UseSSL)
+                .Build();
+        });
+
+        services.AddScoped<IMinioService, MinioService>();
+
+        // ── Image resize ──────────────────────────────────────────────────────
+        services.AddScoped<IImageResizeService, ImageResizeService>();
+        services.AddHostedService<ImageResizeBackgroundService>();
+
+        // ── DbContexts ────────────────────────────────────────────────────────
+        services.AddDbContext<CommandDbContext>(opt =>
+            opt.UseNpgsql(configuration.GetConnectionString("CommandDb"))
+        );
+
+        // QueryDbApp uses the read-only turbo_reader PostgreSQL user at runtime.
+        // EF CLI migrations use QueryDb (admin) via QueryDbContextDesignTimeFactory.
+        services.AddDbContext<QueryDbContext>(opt =>
+            opt.UseNpgsql(configuration.GetConnectionString("QueryDbApp"))
+        );
+
+        // ── Media DbContext interface aliases ─────────────────────────────────
+        services.AddScoped<IMediaWriteDbContext>(sp => sp.GetRequiredService<CommandDbContext>());
+        services.AddScoped<IMediaReadDbContext>(sp => sp.GetRequiredService<QueryDbContext>());
+
+        return services;
+    }
+
+    public static void AddMediaConsumers(this IBusRegistrationConfigurator cfg)
+    {
+        cfg.AddConsumer<DraftImagesUploadedConsumer>();
+        cfg.AddConsumer<CarListingPublishedConsumer>();
+    }
+
+    /// <summary>
+    /// Media modulu üçün pending migration-ları hər iki DB-yə tətbiq edir.
+    /// QueryDb (admin) istifadə edilir — QueryDbApp (read-only) yox.
+    /// </summary>
+    public static async Task MigrateMediaAsync(this IServiceProvider services)
+    {
+        var config = services.GetRequiredService<IConfiguration>();
+        var logger = services.GetRequiredService<ILogger<CommandDbContext>>();
+
+        var commandConnStr = config.GetConnectionString("CommandDb")
+            ?? throw new InvalidOperationException("ConnectionStrings:CommandDb tapılmadı.");
+        var queryConnStr = config.GetConnectionString("QueryDb")
+            ?? throw new InvalidOperationException("ConnectionStrings:QueryDb tapılmadı.");
+
+        await using var commandCtx = new CommandDbContext(
+            new DbContextOptionsBuilder<CommandDbContext>()
+                .UseNpgsql(commandConnStr)
+                .Options);
+        logger.LogInformation("[Media] CommandDb migration tətbiq edilir...");
+        await commandCtx.Database.MigrateAsync();
+
+        await using var queryCtx = new QueryDbContext(
+            new DbContextOptionsBuilder<QueryDbContext>()
+                .UseNpgsql(queryConnStr)
+                .Options);
+        logger.LogInformation("[Media] QueryDb migration tətbiq edilir...");
+        await queryCtx.Database.MigrateAsync();
+
+        logger.LogInformation("[Media] Migration tamamlandı.");
+    }
+}

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MassTransit" Version="8.4.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../Core/Turbo.Module.Catalog.Application/Turbo.Module.Catalog.Application.csproj" />
+    <ProjectReference Include="../../../../BuildingBlocks/Turbo.Shared.Application/Turbo.Shared.Application.csproj" />
+    <ProjectReference Include="../../../../BuildingBlocks/Turbo.Shared.Contracts/Turbo.Shared.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>
