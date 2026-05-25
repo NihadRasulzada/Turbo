@@ -1,32 +1,13 @@
-using FluentValidation;
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
-using Turbo.Module.Catalog.Persistence.Contexts;
-using Turbo.Module.Catalog.Persistence.Features.Brand.Commands.CreateBrand;
-using Turbo.Module.Catalog.Persistence.Features.Brand.Commands.DeleteBrand;
-using Turbo.Module.Catalog.Persistence.Features.Brand.Commands.UpdateBrand;
-using Turbo.Module.Catalog.Persistence.Features.Brand.Queries.GetAllBrands;
-using Turbo.Module.Catalog.Persistence.Features.Brand.Queries.GetBrandById;
-using Turbo.Module.Catalog.Persistence.Features.Model.Commands.CreateModel;
-using Turbo.Module.Catalog.Persistence.Features.Model.Commands.DeleteModel;
-using Turbo.Module.Catalog.Persistence.Features.Model.Commands.UpdateModel;
-using Turbo.Module.Catalog.Persistence.Features.Model.Queries.GetAllModels;
-using Turbo.Module.Catalog.Persistence.Features.Model.Queries.GetModelById;
-using Turbo.Module.Catalog.Persistence.Features.Cars.Commands.CreateDraft;
-using Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftDetails;
-using Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftImages;
-using Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftPricing;
-using Turbo.Module.Catalog.Persistence.Features.Cars.Queries.GetDraft;
-using Turbo.Module.Catalog.Persistence.Features.Cars.Queries.GetCarConfig;
+using Turbo.Module.Catalog.DependencyInjection.Extensions;
 using Turbo.Module.Media.DependencyInjection.Extensions;
 using Turbo.Shared.Application.Abstraction;
 using Turbo.Shared.Application.Pipeline;
 using Turbo.Shared.Infrastructure.Implementations;
 using Turbo.Shared.Infrastructure.Pipeline;
 using Turbo.Shared.Infrastructure.Settings;
-using AppConc = Turbo.Shared.Application.ResponseObject.Concreate;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,96 +38,8 @@ builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 // ── Pipeline behaviors ────────────────────────────────────────────────────────
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
 
-// ── Catalog DbContexts ────────────────────────────────────────────────────────
-builder.Services.AddDbContext<CommandDbContext>(opt =>
-    opt.UseNpgsql(builder.Configuration.GetConnectionString("CommandDb"))
-);
-
-// QueryDbApp uses the read-only turbo_reader PostgreSQL user at runtime.
-// EF CLI migrations use QueryDb (admin) via QueryDbContextDesignTimeFactory.
-builder.Services.AddDbContext<QueryDbContext>(opt =>
-    opt.UseNpgsql(builder.Configuration.GetConnectionString("QueryDbApp"))
-);
-
-// ── Catalog DbContext interface aliases ───────────────────────────────────────
-builder.Services.AddScoped<ICatalogWriteDbContext>(sp => sp.GetRequiredService<CommandDbContext>());
-builder.Services.AddScoped<ICatalogReadDbContext>(sp => sp.GetRequiredService<QueryDbContext>());
-
-// ── Brand ─────────────────────────────────────────────────────────────────────
-builder.Services.AddScoped<
-    IQueryHandler<GetAllBrandsRequest, AppConc.Response<IReadOnlyList<GetAllBrandsResponse>>>,
-    GetAllBrandsHandler>();
-
-builder.Services.AddScoped<
-    IQueryHandler<GetBrandByIdRequest, AppConc.Response<GetBrandByIdResponse>>,
-    GetBrandByIdHandler>();
-
-builder.Services.AddScoped<
-    ICommandHandler<CreateBrandRequest, AppConc.Response<CreateBrandResponse>>,
-    CreateBrandHandler>();
-builder.Services.AddScoped<IValidator<CreateBrandRequest>, CreateBrandValidator>();
-
-builder.Services.AddScoped<
-    ICommandHandler<UpdateBrandRequest, AppConc.Response<UpdateBrandResponse>>,
-    UpdateBrandHandler>();
-builder.Services.AddScoped<IValidator<UpdateBrandRequest>, UpdateBrandValidator>();
-
-builder.Services.AddScoped<
-    ICommandHandler<DeleteBrandRequest, AppConc.Response>,
-    DeleteBrandHandler>();
-
-// ── Model ─────────────────────────────────────────────────────────────────────
-builder.Services.AddScoped<
-    IQueryHandler<GetAllModelsRequest, AppConc.Response<IReadOnlyList<GetAllModelsResponse>>>,
-    GetAllModelsHandler>();
-
-builder.Services.AddScoped<
-    IQueryHandler<GetModelByIdRequest, AppConc.Response<GetModelByIdResponse>>,
-    GetModelByIdHandler>();
-
-builder.Services.AddScoped<
-    ICommandHandler<CreateModelRequest, AppConc.Response<CreateModelResponse>>,
-    CreateModelHandler>();
-builder.Services.AddScoped<IValidator<CreateModelRequest>, CreateModelValidator>();
-
-builder.Services.AddScoped<
-    ICommandHandler<UpdateModelRequest, AppConc.Response<UpdateModelResponse>>,
-    UpdateModelHandler>();
-builder.Services.AddScoped<IValidator<UpdateModelRequest>, UpdateModelValidator>();
-
-builder.Services.AddScoped<
-    ICommandHandler<DeleteModelRequest, AppConc.Response>,
-    DeleteModelHandler>();
-
-// ── Cars commands ─────────────────────────────────────────────────────────────
-builder.Services.AddScoped<
-    ICommandHandler<CreateDraftRequest, AppConc.Response<CreateDraftResponse>>,
-    CreateDraftHandler>();
-
-builder.Services.AddScoped<
-    ICommandHandler<SubmitDraftImagesRequest, AppConc.Response<SubmitDraftImagesResponse>>,
-    SubmitDraftImagesHandler>();
-
-builder.Services.AddScoped<
-    ICommandHandler<SubmitDraftDetailsRequest, AppConc.Response<SubmitDraftDetailsResponse>>,
-    SubmitDraftDetailsHandler>();
-builder.Services.AddScoped<IValidator<SubmitDraftDetailsRequest>, SubmitDraftDetailsValidator>();
-
-builder.Services.AddScoped<
-    ICommandHandler<SubmitDraftPricingRequest, AppConc.Response<SubmitDraftPricingResponse>>,
-    SubmitDraftPricingHandler>();
-builder.Services.AddScoped<IValidator<SubmitDraftPricingRequest>, SubmitDraftPricingValidator>();
-
-// ── Cars queries ──────────────────────────────────────────────────────────────
-builder.Services.AddScoped<
-    IQueryHandler<GetCarConfigRequest, AppConc.Response<GetCarConfigResponse>>,
-    GetCarConfigHandler>();
-
-builder.Services.AddScoped<
-    IQueryHandler<GetDraftRequest, AppConc.Response<GetDraftResponse>>,
-    GetDraftHandler>();
-
-// ── Media ─────────────────────────────────────────────────────────────────────
+// ── Modules ───────────────────────────────────────────────────────────────────
+builder.Services.AddCatalogModule(builder.Configuration);
 builder.Services.AddMediaModule(builder.Configuration);
 
 // ── MassTransit / RabbitMQ ────────────────────────────────────────────────────
@@ -170,6 +63,10 @@ builder.Services.AddMassTransit(x =>
 
 // ─────────────────────────────────────────────────────────────────────────────
 var app = builder.Build();
+
+// ── Database migrations ───────────────────────────────────────────────────────
+await app.Services.MigrateCatalogAsync();
+await app.Services.MigrateMediaAsync();
 
 if (app.Environment.IsDevelopment())
 {

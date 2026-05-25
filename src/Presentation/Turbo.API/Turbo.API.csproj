@@ -10,6 +10,10 @@
   <ItemGroup>
     <PackageReference Include="MassTransit.RabbitMQ" Version="8.4.1" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.14.14" />
   </ItemGroup>
@@ -20,7 +24,6 @@
     <ProjectReference Include="..\..\Modules\Media\Presentation\Turbo.Module.Media.DependencyInjection\Turbo.Module.Media.DependencyInjection.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\Turbo.Shared.Infrastructure\Turbo.Shared.Infrastructure.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\Turbo.Shared.Web\Turbo.Shared.Web.csproj" />
-    <ProjectReference Include="..\..\Modules\Catalog\Infrastructure\Turbo.Module.Catalog.Persistence\Turbo.Module.Catalog.Persistence.csproj" />
   </ItemGroup>
 
 </Project>
