@@ -25,7 +25,7 @@ public class RefreshToken : BaseEntity
         IsRevoked = false;
     }
 
-    
+
     private RefreshToken(Guid id) : base(id)
     {
     }
