@@ -52,18 +52,20 @@ format-check:
 MODULE ?= Identity
 MIGRATIONS_PROJECT_IDENTITY := src/Modules/Identity/Infrastructure/Turbo.Module.Identity.Persistence/Turbo.Module.Identity.Persistence.csproj
 MIGRATIONS_PROJECT_CAR      := src/Modules/Catalog/Infrastructure/Turbo.Module.Catalog.Persistence/Turbo.Module.Catalog.Persistence.csproj
+MIGRATIONS_PROJECT_CATALOG  := src/Modules/Catalog/Infrastructure/Turbo.Module.Catalog.Persistence/Turbo.Module.Catalog.Persistence.csproj
+MIGRATIONS_PROJECT_MEDIA    := src/Modules/Media/Infrastructure/Turbo.Module.Media.Persistence/Turbo.Module.Media.Persistence.csproj
 
 .PHONY: mig-add
 mig-add:
-	dotnet ef migrations add $(NAME) --project $(MIGRATIONS_PROJECT_$(MODULE)) --startup-project $(API)
+	dotnet ef migrations add $(NAME) --project $(MIGRATIONS_PROJECT_$(MODULE)) --startup-project $(API) --context CommandDbContext
 
 .PHONY: mig-apply
 mig-apply:
-	dotnet ef database update --project $(MIGRATIONS_PROJECT_$(MODULE)) --startup-project $(API)
+	dotnet ef database update --project $(MIGRATIONS_PROJECT_$(MODULE)) --startup-project $(API) --context CommandDbContext
 
 .PHONY: mig-remove
 mig-remove:
-	dotnet ef migrations remove --project $(MIGRATIONS_PROJECT_$(MODULE)) --startup-project $(API)
+	dotnet ef migrations remove --project $(MIGRATIONS_PROJECT_$(MODULE)) --startup-project $(API) --context CommandDbContext
 
 # ── List projects ─────────────────────────────────────────────
 .PHONY: list
