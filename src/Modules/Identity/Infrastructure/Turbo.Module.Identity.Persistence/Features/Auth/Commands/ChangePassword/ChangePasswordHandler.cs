@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Turbo.Module.Identity.Application.Common.Interfaces;
+using Turbo.Module.Identity.Domain.Entity;
 using Turbo.Module.Identity.Domain.Exceptions;
 using Turbo.Module.Identity.Persistence.Context;
 
@@ -22,8 +24,10 @@ public sealed class ChangePasswordHandler(
             .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken)
             ?? throw new UserNotFoundException(request.UserId);
 
-        if (!passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
-            throw new InvalidCredentialsException();
+        var result = await userManager.ChangePasswordAsync(
+            user,
+            request.CurrentPassword,
+            request.NewPassword);
 
         var trackedUser = await commandDb.Users
             .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken)

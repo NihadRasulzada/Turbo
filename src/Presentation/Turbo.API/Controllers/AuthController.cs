@@ -39,7 +39,7 @@ public sealed class AuthController(IMediator mediator) : ControllerBase
         [FromBody] RegisterUserCommand command,
         CancellationToken ct)
     {
-        var result = await mediator.Send(command, ct);
+        var result = await userService.RegisterAsync(request, ct);
         return CreatedAtAction(nameof(Register), new { result.UserId }, result);
     }
 
@@ -64,7 +64,7 @@ public sealed class AuthController(IMediator mediator) : ControllerBase
         [FromBody] LoginQuery query,
         CancellationToken ct)
     {
-        var result = await mediator.Send(query, ct);
+        var result = await userService.LoginAsync(request, ct);
         return Ok(result);
     }
 
@@ -87,7 +87,7 @@ public sealed class AuthController(IMediator mediator) : ControllerBase
         [FromBody] RefreshTokenQuery query,
         CancellationToken ct)
     {
-        var result = await mediator.Send(query, ct);
+        var result = await userService.RefreshTokenAsync(request, ct);
         return Ok(result);
     }
 

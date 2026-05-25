@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Turbo.Module.Identity.Application.Common.Interfaces;
 using Turbo.Module.Identity.Infrastructure.EmailWorker;
 using Turbo.Module.Identity.Infrastructure.Messaging;
