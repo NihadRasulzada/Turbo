@@ -49,4 +49,10 @@ public sealed class JwtService(IOptions<JwtOptions> options) : IJwtService
 
     public DateTime GetAccessTokenExpiresAt() =>
         DateTime.UtcNow.AddMinutes(_opts.AccessTokenExpiryMinutes);
+
+    public string HashRefreshToken(string rawToken)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(rawToken));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
 }

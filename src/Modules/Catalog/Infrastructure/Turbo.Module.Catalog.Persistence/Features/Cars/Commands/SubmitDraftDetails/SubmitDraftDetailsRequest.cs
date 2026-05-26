@@ -11,5 +11,6 @@ public sealed record SubmitDraftDetailsRequest(
     short Year,
     FuelType FuelType,
     TransmissionType TransmissionType,
-    int Mileage
+    int Mileage,
+    Guid RequesterId
 ) : ICommand<AppConc.Response<SubmitDraftDetailsResponse>>;

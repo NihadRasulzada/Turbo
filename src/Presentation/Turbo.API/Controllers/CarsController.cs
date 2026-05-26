@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Turbo.API.Controllers.Requests;
 using Turbo.API.Extensions;
@@ -19,14 +21,19 @@ namespace Turbo.API.Controllers;
 [ApiController]
 [Route("api/cars")]
 [Produces("application/json")]
+[Authorize]
 public sealed class CarsController(
     ICommandDispatcher commandDispatcher,
     IQueryDispatcher queryDispatcher) : ControllerBase
 {
+    private Guid CallerId =>
+        Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
     /// <summary>
-    /// Returns the step definitions for the onboarding flow.
+    /// Returns the step definitions for the onboarding flow (public).
     /// </summary>
     [HttpGet]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(SuccessResponse<GetCarConfigResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetConfig(CancellationToken ct)
     {
@@ -46,7 +53,7 @@ public sealed class CarsController(
     {
         var result = await commandDispatcher
             .DispatchAsync<CreateDraftRequest, AppConc.Response<CreateDraftResponse>>(
-                new CreateDraftRequest(), ct);
+                new CreateDraftRequest(CallerId), ct);
         return this.HandleServiceResponse(result);
     }
 
@@ -55,12 +62,13 @@ public sealed class CarsController(
     /// </summary>
     [HttpGet("drafts/{draftId:guid}")]
     [ProducesResponseType(typeof(SuccessResponse<GetDraftResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetDraft([FromRoute] Guid draftId, CancellationToken ct)
     {
         var result = await queryDispatcher
             .DispatchAsync<GetDraftRequest, AppConc.Response<GetDraftResponse>>(
-                new GetDraftRequest(draftId), ct);
+                new GetDraftRequest(draftId, CallerId), ct);
         return this.HandleServiceResponse(result);
     }
 
@@ -71,13 +79,14 @@ public sealed class CarsController(
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(SuccessResponse<SubmitDraftImagesResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BadRequestResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SubmitImages(
         [FromRoute] Guid draftId,
         [FromForm] SubmitDraftImagesHttpRequest request,
         CancellationToken ct)
     {
-        var command = new SubmitDraftImagesRequest(draftId, await request.Images.ToImageDataAsync(ct));
+        var command = new SubmitDraftImagesRequest(draftId, await request.Images.ToImageDataAsync(ct), CallerId);
         var result = await commandDispatcher
             .DispatchAsync<SubmitDraftImagesRequest, AppConc.Response<SubmitDraftImagesResponse>>(command, ct);
         return this.HandleServiceResponse(result);
@@ -90,6 +99,7 @@ public sealed class CarsController(
     [ProducesResponseType(typeof(SuccessResponse<SubmitDraftDetailsResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType(typeof(BadRequestResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SubmitDetails(
         [FromRoute] Guid draftId,
@@ -98,7 +108,8 @@ public sealed class CarsController(
     {
         var command = new SubmitDraftDetailsRequest(
             draftId, request.BrandId, request.ModelId, request.Year,
-            request.FuelType, request.TransmissionType, request.Mileage);
+            request.FuelType, request.TransmissionType, request.Mileage,
+            CallerId);
         var result = await commandDispatcher
             .DispatchAsync<SubmitDraftDetailsRequest, AppConc.Response<SubmitDraftDetailsResponse>>(command, ct);
         return this.HandleServiceResponse(result);
@@ -111,13 +122,14 @@ public sealed class CarsController(
     [ProducesResponseType(typeof(CreatedResponse<SubmitDraftPricingResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType(typeof(BadRequestResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SubmitPricing(
         [FromRoute] Guid draftId,
         [FromBody] SubmitDraftPricingHttpRequest request,
         CancellationToken ct)
     {
-        var command = new SubmitDraftPricingRequest(draftId, request.Price, request.Description);
+        var command = new SubmitDraftPricingRequest(draftId, request.Price, request.Description, CallerId);
         var result = await commandDispatcher
             .DispatchAsync<SubmitDraftPricingRequest, AppConc.Response<SubmitDraftPricingResponse>>(command, ct);
         return this.HandleServiceResponse(result);

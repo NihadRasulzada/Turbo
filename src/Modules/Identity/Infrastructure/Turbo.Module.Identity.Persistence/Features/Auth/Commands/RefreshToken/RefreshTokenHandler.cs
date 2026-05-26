@@ -16,10 +16,13 @@ public sealed class RefreshTokenHandler(
     public async Task<AppConc.Response<RefreshTokenResponse>> HandleAsync(
         RefreshTokenRequest command, CancellationToken ct = default)
     {
+        // Client raw token göndərir; DB-də hash var → gələni hash-ləyib axtarırıq.
+        var hashedInput = jwtService.HashRefreshToken(command.RefreshToken);
+
         var existing = await readDb.RefreshTokens
             .AsNoTracking()
             .Include(rt => rt.User)
-            .FirstOrDefaultAsync(rt => rt.Token == command.RefreshToken, ct);
+            .FirstOrDefaultAsync(rt => rt.Token == hashedInput, ct);
 
         if (existing is null || !existing.IsValid())
             return AppConc.Response<RefreshTokenResponse>.Unauthorized(
@@ -39,8 +42,10 @@ public sealed class RefreshTokenHandler(
         writeDb.Attach(existing);
         existing.Revoke();
 
-        var newTokenValue = jwtService.GenerateRefreshToken();
-        var newToken = new RefreshTokenEntity(existing.UserId, newTokenValue);
+        // Yeni raw token client-ə göndərilir; DB-də hash saxlanılır.
+        var newRawToken    = jwtService.GenerateRefreshToken();
+        var newHashedToken = jwtService.HashRefreshToken(newRawToken);
+        var newToken       = new RefreshTokenEntity(existing.UserId, newHashedToken);
         var refreshTokenExpiresAt =
             DateTimeOffset.FromUnixTimeSeconds(newToken.ExpiresAtSeconds).UtcDateTime;
         writeDb.Add(newToken);
@@ -52,6 +57,6 @@ public sealed class RefreshTokenHandler(
         var accessTokenExpiresAt = jwtService.GetAccessTokenExpiresAt();
 
         return AppConc.Response<RefreshTokenResponse>.Success(
-            new RefreshTokenResponse(accessToken, accessTokenExpiresAt, newTokenValue, refreshTokenExpiresAt));
+            new RefreshTokenResponse(accessToken, accessTokenExpiresAt, newRawToken, refreshTokenExpiresAt));
     }
 }

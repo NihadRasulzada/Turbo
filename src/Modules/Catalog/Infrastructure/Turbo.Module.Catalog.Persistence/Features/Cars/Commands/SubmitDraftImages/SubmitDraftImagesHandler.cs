@@ -28,6 +28,9 @@ public sealed class SubmitDraftImagesHandler(
             .FirstOrDefaultAsync(d => d.Id == command.DraftId, ct);
         if (draft is null)
             return AppConc.Response<SubmitDraftImagesResponse>.NotFound("Draft not found.");
+        if (draft.SellerId != command.RequesterId)
+            return AppConc.Response<SubmitDraftImagesResponse>.Forbidden(
+                "You do not have access to this draft.");
         if (draft.Status == CarDraftStatus.Completed)
             return AppConc.Response<SubmitDraftImagesResponse>.BadRequest("Draft is already completed.");
         if (draft.CurrentStep != 1)

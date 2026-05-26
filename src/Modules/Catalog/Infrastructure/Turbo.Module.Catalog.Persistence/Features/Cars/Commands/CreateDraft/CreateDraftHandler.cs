@@ -13,7 +13,7 @@ public sealed class CreateDraftHandler(ICatalogWriteDbContext writeDb)
         CreateDraftRequest command,
         CancellationToken ct = default)
     {
-        var draft = new CarDraft();
+        var draft = CarDraft.Create(command.SellerId);
         writeDb.Add(draft);
         await writeDb.SaveChangesAsync(ct);
         return AppConc.Response<CreateDraftResponse>.Created(new CreateDraftResponse(draft.Id));

@@ -52,8 +52,11 @@ public sealed class LoginHandler(
         var accessToken = jwtService.GenerateAccessToken(user);
         var accessTokenExpiresAt = jwtService.GetAccessTokenExpiresAt();
 
-        var refreshTokenValue = jwtService.GenerateRefreshToken();
-        var refreshToken = new RefreshTokenEntity(user.Id, refreshTokenValue);
+        // Raw token client-ə göndərilir; DB-də yalnız SHA-256 hash saxlanılır.
+        // Belə ki, DB sızması bütün aktiv sessiyaları ifşa etmir.
+        var rawRefreshToken = jwtService.GenerateRefreshToken();
+        var hashedToken     = jwtService.HashRefreshToken(rawRefreshToken);
+        var refreshToken    = new RefreshTokenEntity(user.Id, hashedToken);
         var refreshTokenExpiresAt =
             DateTimeOffset.FromUnixTimeSeconds(refreshToken.ExpiresAtSeconds).UtcDateTime;
 
@@ -61,6 +64,6 @@ public sealed class LoginHandler(
         await writeDb.SaveChangesAsync(ct);
 
         return AppConc.Response<LoginResponse>.Success(
-            new LoginResponse(accessToken, accessTokenExpiresAt, refreshTokenValue, refreshTokenExpiresAt, user.Id));
+            new LoginResponse(accessToken, accessTokenExpiresAt, rawRefreshToken, refreshTokenExpiresAt, user.Id));
     }
 }

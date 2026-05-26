@@ -5,7 +5,6 @@ namespace Turbo.Module.Catalog.Domain.Entity;
 
 public class CarDraft : BaseEntity
 {
-    // TODO: populate from JWT when Identity module is active
     public Guid? SellerId { get; private set; }
     public CarDraftStatus Status { get; private set; }
     public int CurrentStep { get; private set; }
@@ -23,14 +22,23 @@ public class CarDraft : BaseEntity
     public int? Price { get; private set; }
     public string? Description { get; private set; }
 
-    public CarDraft() : base(Guid.NewGuid())
+    // ── Factory ──────────────────────────────────────────────────────────────
+    /// <summary>
+    /// Yeni draft yaradır. SellerId-nin token-dən gəlməsi təmin edilir.
+    /// </summary>
+    public static CarDraft Create(Guid sellerId) =>
+        new(Guid.NewGuid(), (Guid?)sellerId);
+
+    // Two-arg constructor avoids signature clash with EF Core's single-Guid ctor.
+    private CarDraft(Guid id, Guid? sellerId) : base(id)
     {
+        SellerId = sellerId;
         Status = CarDraftStatus.InProgress;
         CurrentStep = 1;
         CreatedAt = DateTime.UtcNow;
     }
 
-    protected CarDraft(Guid id) : base(id) { } // EF Core
+    protected CarDraft(Guid id) : base(id) { } // EF Core materialisation
 
     public void AdvanceStep() => CurrentStep++;
 

@@ -6,5 +6,6 @@ namespace Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftPri
 public sealed record SubmitDraftPricingRequest(
     Guid DraftId,
     int Price,
-    string Description
+    string Description,
+    Guid RequesterId
 ) : ICommand<AppConc.Response<SubmitDraftPricingResponse>>;

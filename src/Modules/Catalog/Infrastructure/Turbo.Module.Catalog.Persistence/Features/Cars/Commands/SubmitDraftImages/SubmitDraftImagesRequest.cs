@@ -6,5 +6,6 @@ namespace Turbo.Module.Catalog.Persistence.Features.Cars.Commands.SubmitDraftIma
 
 public sealed record SubmitDraftImagesRequest(
     Guid DraftId,
-    IReadOnlyList<ImageData> Images
+    IReadOnlyList<ImageData> Images,
+    Guid RequesterId
 ) : ICommand<AppConc.Response<SubmitDraftImagesResponse>>;
